@@ -25,28 +25,14 @@
                             <div class="row">
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">Categories</h5>
+                                    {% for c in categories %}
                                     <ul class="categor-list">
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Jacket</a>(125)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Jeans</a>(68)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Sweatshirts</a>(284)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Trousers</a>(274)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Kitwears</a>(152)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Sportswear</a>(302)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Accessories</a>(168)</li>
+                                        <li class="cat-item text-muted"><a href="{% url 'app1:category-product-list' c.cid %}">{{c.title}}</a></li>
+                                        
                                     </ul>
+                                    {% endfor %}
                                 </div>
-                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">Manufacturers</h5>
-                                    <ul class="categor-list">
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Adidas</a>(125)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Armani</a>(68)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Burberry</a>(274)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Chanel</a>(152)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Prada</a>(302)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Bootstrap</a>(32)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Helixx</a>(312)</li>
-                                    </ul>
-                                </div>
+                                
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">Price range</h5>
                                     <ul class="categor-list">
@@ -62,34 +48,15 @@
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">By Tags</h5>
                                     <ul class="categor-list">
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Cloth</a>(124)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Apple</a>(234)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Headphone</a>(657)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Music</a>(1221)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Dress</a>(455)</li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Trending</a>(1553)</li>
+                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Autpart</a></li>
+                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Hybrid</a></li>
+                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Gel</a></li>
+                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Interior</a></li>
+                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Exterior</a></li>
+                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">Trending</a></li>
                                     </ul>
                                 </div>
-                                <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">By Color</h5>
-                                    <ul class="list-filter color-filter">
-                                        <li><a href="#" data-color="Red"><span class="product-color-red"></span></a></li>
-                                        <li><a href="#" data-color="Yellow"><span class="product-color-yellow"></span></a></li>
-                                        <li class="active"><a href="#" data-color="White"><span class="product-color-white"></span></a></li>
-                                        <li><a href="#" data-color="Orange"><span class="product-color-orange"></span></a></li>
-                                        <li><a href="#" data-color="Cyan"><span class="product-color-cyan"></span></a></li>
-                                        <li><a href="#" data-color="Green"><span class="product-color-green"></span></a></li>
-                                        <li><a href="#" data-color="Purple"><span class="product-color-purple"></span></a></li>
-                                    </ul>
-                                    <h5 class="mb-15 mt-20">By Size</h5>
-                                    <ul class="list-filter size-filter font-small">
-                                        <li><a href="#">S</a></li>
-                                        <li class="active"><a href="#">M</a></li>
-                                        <li><a href="#">L</a></li>
-                                        <li><a href="#">XL</a></li>
-                                        <li><a href="#">XXL</a></li>
-                                    </ul>
-                                </div>
+                                
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">By Review</h5>
                                     <div class="product-rate-cover">
@@ -185,7 +152,7 @@
                                     <div class="product-img-action-wrap">
                                         <div class="product-img product-img-zoom">
                                             <a href="shop-product-right.html">
-                                                <img class="default-img" src="{{p.image.url}}" alt="">
+                                               <a href="{% url 'app1:product-detail' p.pid %}"><img class="default-img" src="{{p.image.url}}" alt=""></a> 
                                                 <img class="hover-img" src="{{p.image.url}}" alt="">
                                             </a>
                                         </div>
@@ -200,9 +167,9 @@
                                     </div>
                                     <div class="product-content-wrap">
                                         <div class="product-category">
-                                            <a href="shop-grid-right.html">{{p.category}}</a>
+                                            <a href="{% url 'app1:product-detail' p.pid %}">{{p.category}}</a>
                                         </div>
-                                        <h2><a href="shop-product-right.html">{{p.title}}</a></h2>
+                                        <h2><a href="{% url 'app1:product-detail' p.pid %}">{{p.title}}</a></h2>
                                         <div class="rating-result" title="90%">
                                             <span>
                                                 <span>90%</span>

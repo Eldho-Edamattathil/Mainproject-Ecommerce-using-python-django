@@ -1,0 +1,18 @@
+<center><strong>CONFRIM YOUR ACCOUNT</strong></center>
+
+<center><p>check the inbox of your email - {{email}} - and enter the otp<p></center>
+
+<body>
+    <form action="{% url 'userauths:otp_verification'%}" method="POST">
+        {% csrf_token %}
+        <center>Enter the otp : <input type="text" placeholder="enter the otp" name="otp"></center><br><br>
+        <center><button type="submit">verify</button></center>
+    </form>
+</body>
+
+
+{%if messages%}
+{%for message in messages%}
+<script>alert('{{message}}')</script>
+{%endfor%}
+{%endif%}

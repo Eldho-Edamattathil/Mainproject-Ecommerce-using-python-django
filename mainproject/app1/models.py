@@ -59,6 +59,15 @@ class Product(models.Model):
   old_price = models.DecimalField(max_digits =10, decimal_places =2, default = 2.99)
 
   specifications = models.TextField(null =True, blank =True)
+  type = models.CharField(max_length = 100,default = "Automobile",null=True, blank=True)
+  stock_count = models.CharField(max_length = 100,default = "10",null=True, blank=True)
+  mfd=models.DateTimeField(auto_now_add=False,null=True, blank=True)
+  return_policy= models.CharField(max_length = 100,default = "10", null=True, blank=True)
+  warrenty = models.CharField(max_length = 100,default = "1", null=True, blank=True)
+  
+  
+  
+  
   # tags = models.ForeignKey(Tags, on_delete = models.SET_NULL, null =True)
   
   
@@ -66,7 +75,8 @@ class Product(models.Model):
   status = models.BooleanField(default=True)
   in_stock = models.BooleanField(default=True)
   featured = models.BooleanField(default=False)
-  digital = models.BooleanField(default=False)  
+  digital = models.BooleanField(default=False)
+  cod =models.BooleanField(default=True)  
 
     
   sku = ShortUUIDField(unique =True,max_length = 20)
@@ -89,7 +99,7 @@ class Product(models.Model):
 
 class ProductImages(models.Model):
   Images = models.ImageField(upload_to="products-images", default = "product.jpg")
-  product = models.ForeignKey(Product, on_delete = models.SET_NULL,null =True)
+  product = models.ForeignKey(Product, related_name='p_images',on_delete = models.SET_NULL,null =True)
   date = models.DateField(auto_now_add =True)
   
   class Meta:

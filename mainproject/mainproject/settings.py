@@ -33,7 +33,9 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'app1',
+    'adminside',
     'userauths',
+    'admindash',
     'shortuuid',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -62,6 +64,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'app1.context_processor.default',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -147,3 +150,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Include the default backend
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS=True
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_FROM='eldhogeorgeee@gmail.com'
+EMAIL_HOST_USER='eldhogeorgeee@gmail.com'
+EMAIL_HOST_PASSWORD='yncv znev bsyf flea'
+EMAIL_PORT=587
