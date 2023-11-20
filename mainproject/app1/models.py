@@ -1,6 +1,7 @@
 from django.db import models
-
 from shortuuidfield import ShortUUIDField
+
+
 from django.utils.html import mark_safe
 from userauths.models import User
 
@@ -20,8 +21,14 @@ RATING = (
   
 
 
-def user_directory_path(instance,filename):
-  return 'user_{0}/{1}'.format(instance.user.id, filename)
+# def user_directory_path(instance,filename):
+#   return 'user_{0}/{1}'.format(instance.user.id, filename)
+def user_directory_path(instance, filename):
+    if instance.user and instance.user.id:
+        return 'user_{0}/{1}'.format(instance.user.id, filename)
+    else:
+        # Handle the case when user or user.id is None
+        return 'user_unknown/{0}'.format(filename)
 
 
 class Category(models.Model):
@@ -52,7 +59,7 @@ class Product(models.Model):
   category = models.ForeignKey(Category, on_delete = models.SET_NULL,null = True, related_name ="category")
   
   title = models.CharField(max_length = 100,default = "Fresh pear")
-  image = models.ImageField(upload_to=user_directory_path, default = "product.jpg")
+  image = models.ImageField(upload_to=user_directory_path, default = "product.jpg", null=True,blank=True)
   description = models.TextField(null =True, blank =True, default = "This is the product")
   
   price = models.DecimalField(max_digits =10, decimal_places =2, default = 1.99 )

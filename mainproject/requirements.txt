@@ -1,0 +1,2 @@
+Django==4.2.7
+shortuuid==1.0.11

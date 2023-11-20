@@ -3,8 +3,8 @@ from django.shortcuts import render
 from app1.models import Product,ProductImages,Category
 
 def index(request):
-    products = Product.objects.filter(featured = True)
-    latest = Product.objects.all().order_by("-id")[:10]
+    products = Product.objects.filter(featured = True, status =True)
+    latest = Product.objects.filter(status=True).order_by("-id")[:10]
     categories =Category.objects.all()
 
     
@@ -18,7 +18,7 @@ def index(request):
 
 def product_list(request):
     
-    products = Product.objects.all()
+    products = Product.objects.all(status =True)
     categories =Category.objects.all()
     
     context = {
@@ -43,7 +43,7 @@ def category_list(request):
 
 def category_product_list(request, cid):
     category = Category.objects.get(cid=cid)
-    product = Product.objects.filter(category=category)
+    product = Product.objects.filter(category=category,status =True)
     
     
     context ={

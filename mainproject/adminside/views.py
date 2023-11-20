@@ -47,7 +47,7 @@ def users_list(request):
     if search_query:
          users = User.objects.filter(username__icontains=search_query)
     else:
-         users = User.objects.all()
+         users = User.objects.all().order_by('id')
          print("the users are :", users)
     context = {
         'users': users

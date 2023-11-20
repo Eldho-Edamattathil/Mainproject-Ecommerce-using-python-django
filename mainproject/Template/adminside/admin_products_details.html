@@ -19,12 +19,12 @@
                 <div class="card-header">
                     <h4>Product Details</h4>
                 </div>
+                {{form.errors}}
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="row">
                             <div class="col-lg-6">
-                            
                                 <div class="mb-4">
                                     <label for="{{form.title.id_for_label}}" class="form-label">Product name</label>
                                     <div class="row gx-2">
@@ -34,7 +34,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{form.sku_id.id_for_label}}" class="form-label">SKU_id / Model number </label>
+                                    <label for="{{form.sku.id_for_label}}" class="form-label">SKU_id / Model number </label>
                                     {{form.sku}}
                                 </div>
                             </div>
@@ -42,13 +42,13 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{form.product_catg.id_for_label}}" class="form-label">Category </label>
+                                    <label for="{{form.category.id_for_label}}" class="form-label">Category </label>
                                     {{form.category}}
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{form.product_brand.id_for_label}}" class="form-label">Brand </label>
+                                    <label for="{{form.stock_count.id_for_label}}" class="form-label">Stock Count </label>
                                     {{form.stock_count}}
                                 </div>
                             </div>
@@ -60,7 +60,7 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{ form.max_price.id_for_label }}" class="form-label">Max price</label>
+                                    <label for="{{ form.old_price.id_for_label }}" class="form-label">Max price</label>
                                     <div class="row gx-2">
                                         {{form.old_price}}
                                     </div>
@@ -68,7 +68,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{form.sale_price.id_for_label}}" class="form-label">Sale price</label>
+                                    <label for="{{form.price.id_for_label}}" class="form-label">Sale price</label>
                                     {{form.price}}
                                 </div>
                             </div>
@@ -76,18 +76,52 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <img src="{{product.image.url}}" class="img-mb img-thumbnail" alt="Item">
+                                    {% if product.image %}
+                                            <img src="{{ product.image.url }}" class="img-sm img-thumbnail" alt="">
+                                            {% else %}
+                                            <p>No image available</p>
+                                            {% endif %}
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{ form.image.id_for_label }}">Image</label>
-                                    <input type="file" name="image">
+                                    <label for="{{ form.new_image.id_for_label }}">New Image</label>
+                                    {{ form.new_image }}
+                                    {% if product.image %}
+                                        <p>Existing Image:</p>
+                                        <img src="{{ product.image.url }}" class="img-sm img-thumbnail" alt="">
+                                        <input type="hidden" name="{{ form.new_image.name }}" value="{{ product.image.url }}">
+                                    {% else %}
+                                        <input type="hidden" name="{{ form.new_image.name }}" value="">
+                                    {% endif %}
                                 </div>
                             </div>
-
+                            
+                            
+                            
                         </div>
-                         
+                        <!-- multiimages -->
+                        <!-- <div class="row">
+                            <div class="col-lg-6">
+                                <div class="mb-4">
+                                    <label for="product_images">Product Images</label>
+                                    {{ product_images_formset.management_form }}
+                                    {% for form in images_formset %}
+                                        {{ form.as_p }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                    </div> -->
+
+
+
+
+
+
+
+
+                        <!-- multi images -->
                         <div class="row">
                             <div class="col-lg-2">
                                 <div class="mb-4">
@@ -96,24 +130,27 @@
                             </div>
                             <div class="col-lg-2">
                                 <div class="mb-4">
-                                    <a href="#" class="btn btn-primary btn-sm rounded">Delete</a>
-                                    
+                                    <a href="{% url 'admindash:admin_delete_product' product.pid  %}" class="btn btn-primary btn-sm rounded">Delete</a>
                                 </div>  
                             </div>
                             <div class="col-lg-2">
                                 <div class="mb-4">
-                                    <a href="#" class="btn btn-primary btn-sm rounded">Block Product</a>
-                                                                    
+                                    <!-- <form method="post" action="{% url 'admindash:block_unblock_products' product.pid  %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm {% if not product.status %}btn-danger{% else %}btn-success{% endif %}">
+                                            {% if not product.status %}Unblock{% else %}Block{% endif %}
+                                        </button>
+                                    </form> -->
+                                    <button type="submit" class="btn btn-sm {% if not product.status %}btn-danger{% else %}btn-success{% endif %}">
+                                        {% if not product.status %}Unblock{% else %}Block{% endif %}
+                                    </button>
+                                    <a href="{% url 'admindash:block_unblock_products' product.pid  %}" class="btn btn-primary btn-sm rounded">Unblock</a>
+                                    
                                 </div>  
                             </div>
                         </div>
-                        
-                    </div>
-                       
-                       
-                </div>
-            </div> <!-- card end// -->
-        </form>
+                    </form>
+                    
     </div>
     <div class="row">
         <!-- <div class="col-9">

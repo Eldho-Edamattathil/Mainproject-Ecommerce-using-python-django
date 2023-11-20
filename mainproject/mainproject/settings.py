@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,7 +37,7 @@ INSTALLED_APPS = [
     'adminside',
     'userauths',
     'admindash',
-    'shortuuid',
+   
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -157,3 +158,7 @@ EMAIL_FROM='eldhogeorgeee@gmail.com'
 EMAIL_HOST_USER='eldhogeorgeee@gmail.com'
 EMAIL_HOST_PASSWORD='yncv znev bsyf flea'
 EMAIL_PORT=587
+
+
+
+SHORTUUID_FIELD_SUFFIX = '_short'
