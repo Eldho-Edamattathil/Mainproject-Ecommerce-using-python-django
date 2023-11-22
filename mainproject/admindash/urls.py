@@ -13,6 +13,12 @@ urlpatterns = [
     path('admin_delete_product/<str:pid>',views.delete_product,name='admin_delete_product'),
     path('admin_category_list',views.admin_category_list,name='admin_category_list'),
     path('admin_add_category',views.admin_add_category,name='admin_add_category'),
+    path('admin_category_edit/<str:cid>/',views.admin_category_edit,name='admin_category_edit'),
+    
+    path('admin_delete_category/<str:cid>/',views.delete_category,name='admin_delete_category'),
+    path('block_unblock_category/<str:cid>/',views.available_category,name='block_unblock_category')
+    
+    
     
     
 ]

@@ -27,23 +27,49 @@
                                     <h5 class="mb-20">Categories</h5>
                                     {% for c in categories %}
                                     <ul class="categor-list">
-                                        <li class="cat-item text-muted"><a href="{% url 'app1:category-product-list' c.cid %}">{{c.title}}</a></li>
+                                        <input class="form-check-input filter-checkbox" type="checkbox" name="checkbox" data-filter="category" id="exampleCheckbox2" value="{{c.cid}}" />
+                                        &nbsp;&nbsp;
+                                        <a href="{% url 'app1:category-product-list' c.cid %}"> <img src="" alt="" /> {{c.title}}</a>
+                                        <!-- <li class="cat-item text-muted"><a href="{% url 'app1:category-product-list' c.cid %}">{{c.title}}</a></li> -->
                                         
                                     </ul>
                                     {% endfor %}
                                 </div>
                                 
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <h5 class="mb-20">Price range</h5>
+                                    <!-- <h5 class="mb-20">Price range</h5>
+                                    <input type="range" id="range" class="slider-range" min="0" max="100"> -->
+                                    <div class="price-filter">
+                                        <h5 class="mb-20">Price Range</h5>
+                                        <div id="price-slider"></div>
                                     <ul class="categor-list">
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">All</a></li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">$0.00 - $20.00 </a></li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">$20.00 - $40.00 </a></li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">$40.00 - $60.00 </a></li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">$60.00 - $80.00 </a></li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">$80.00 - $100.00 </a></li>
-                                        <li class="cat-item text-muted"><a href="shop-grid-right.html">$100.00 - $200.00 </a></li>
+                                        
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-1" data-filter="price" value="0-50">
+                                            <label class="form-check-label" for="price-checkbox-1">$0 - $20</label>
+                                        </div>
+                                    
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-2" data-filter="price" value="51-100">
+                                            <label class="form-check-label" for="price-checkbox-2">$21 - $50</label>
+                                        </div>
+
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-2" data-filter="price" value="51-100">
+                                            <label class="form-check-label" for="price-checkbox-2">$51 - $70</label>
+                                        </div>
+
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-2" data-filter="price" value="51-100">
+                                            <label class="form-check-label" for="price-checkbox-2">$81 - $100</label>
+                                        </div>
+
+
+                                    
                                     </ul>
+                                    <button id="apply-filter-btn" class="btn btn-primary">Apply Filter</button>
+                                    </div>
+
                                 </div>
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">By Tags</h5>
@@ -101,7 +127,7 @@
                     <div class="col-lg-12">
                         <div class="shop-product-fillter">
                             <div class="totall-product">
-                                <p> We found <strong class="text-brand">688</strong> items for you!</p>
+                                <p> We found <strong class="text-brand">{{products.count}}</strong> items for you!</p>
                             </div>
                             <div class="sort-by-product-area">
                                 <div class="sort-by-cover mr-10">
@@ -144,7 +170,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row product-grid-3">
+                        <div class="row product-grid-3" id="filtered-product">
 
                             {% for p in products%}
                             <div class="col-lg-3 col-md-4 col-12 col-sm-6">
@@ -199,4 +225,13 @@
             </div>
         </section>
     </main>
+
+
+
+
+
+
+
+
     {%endblock%}
+

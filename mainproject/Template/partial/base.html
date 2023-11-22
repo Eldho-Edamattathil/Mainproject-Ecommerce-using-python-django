@@ -19,9 +19,8 @@
   <link rel="shortcut icon" type="image/x-icon" href="assets/imgs/theme/favicon.svg">
   <!-- Template CSS -->
   <link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
-  <script src="jquery-3.6.4.min.js"></script>
   
-  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 </head>
 
 <body>
@@ -240,11 +239,11 @@
               </div>
               <div class="header-right">
                   <div class="search-style-2">
-                      <form action="#">
+                      <form action="{%url 'app1:search' %}" method="get">
                         
                           <select class="select-active">
                               <option>All Categories</option>
-                              <option>Women's</option>
+                              <option>men's</option>
                               <option>Men's</option>
                               <option>Cellphones</option>
                               <option>Computer</option>
@@ -255,7 +254,8 @@
                               <option>Shoes</option>
                               <option>Mother & Kids</option>
                           </select>
-                          <input type="text" placeholder="Search for items...">
+                          <input type="text" placeholder="Search for items..." name="q">
+                          <button class="fas fa-search"></button>
                       </form>
                   </div>
                   <div class="header-action-right">
@@ -499,7 +499,11 @@
                   <div class="categori-dropdown-wrap categori-dropdown-active-small">
                       <ul>
                         {% for c in categories %}
+                        {% if c.image %}
                           <li><a href="{% url 'app1:category-product-list' c.cid %}"><img src="{{c.image.url}}" alt=""> {{c.title}}</a></li>
+                          {% else %}
+                          <p>No image</p>
+                          {% endif %}
                           {% endfor%}
                       </ul>
                   </div>
@@ -735,6 +739,7 @@
   </div>
 </div> -->
 <!-- Vendor JS-->
+
 <script src="{% static 'assets/js/vendor/modernizr-3.6.0.min.js' %}"></script>
 <script src="{% static 'assets/js/vendor/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'assets/js/vendor/jquery-migrate-3.3.0.min.js' %}"></script>
@@ -755,6 +760,9 @@
 <script src="{% static 'assets/js/plugins/jquery.vticker-min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/jquery.theia.sticky.js' %}"></script>
 <script src="{% static 'assets/js/plugins/jquery.elevatezoom.js' %}"></script>
+
+
+
 <!-- Template  JS -->
 <script src="{% static 'assets/js/main.js' %}"></script>
 <script src="{% static 'assets/js/shop.js' %}"></script>

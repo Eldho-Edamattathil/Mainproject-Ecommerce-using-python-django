@@ -54,7 +54,10 @@ def admin_products_details(request, pid):
         if form.is_valid():
             # Save the form including the image
             product = form.save(commit=False)
-            product.image = form.cleaned_data['new_image']
+            product_image = form.cleaned_data['new_image']
+            if product_image is not None:
+                product.image=product_image
+            
             product.save()
             
             return redirect('admindash:admin_products_list')
@@ -235,8 +238,122 @@ def admin_add_category(request):
     
     return render(request, 'adminside/admin_category_list.html')
 
+
+
+
+# def admin_category_edit(request, cid):
+    if not request.user.is_authenticated:
+        return redirect('adminside:admin_login')
+
+    # Using get_object_or_404 to get the Category or return a 404 response if it doesn't exist
+    categories = get_object_or_404(Category, cid=cid)
+    categories_title=categories.title
+    categories_image=categories.image
     
+    context={
+        'categories_title':categories_title,
+        'categories_image':categories_image
+    }
+
+    if request.method == 'POST':
+        # Update the fields of the existing category object
+        cat_title = request.POST.get("category_name")
+        cat_image = request.FILES.get('category_image')
+        categories_title=cat_title
+        categories_image=cat_image
+        
+        categories.save()
+        
+
+        # Save the changes to the database
+        return redirect('admindash:admin_category_list')
     
+   
+        
+
+    # context = {
+    #     "categories": categories
+    # }
+
+    # Render the template even for GET requests to display the form
+    return render(request, 'adminside/admin_category_edit.html', context)
+
+def admin_category_edit(request, cid):
+    if not request.user.is_authenticated:
+        return redirect('adminside:admin_login')
+
+    # Using get_object_or_404 to get the Category or return a 404 response if it doesn't exist
+    categories = get_object_or_404(Category, cid=cid)
+
+    if request.method == 'POST':
+        # Update the fields of the existing category object
+        cat_title = request.POST.get("category_name")
+        cat_image = request.FILES.get('category_image')
+
+        # Update the category object with the new title and image
+        categories.title = cat_title
+        if cat_image is not None:
+            categories.image = cat_image
+
+        
+        # Save the changes to the database
+        categories.save()
+
+        # Redirect to the category list page after successful update
+        return redirect('admindash:admin_category_list')
+
+    # If the request method is GET, render the template with the category details
+    context = {
+        "categories_title": categories.title,
+        "categories_image": categories.image,
+    }
+
+    return render(request, 'adminside/admin_category_edit.html', context)
+
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def delete_category(request,cid):
+    if not request.user.is_authenticated:
+        return HttpResponse("Unauthorized", status=401)
+    try:
+        category=Category.objects.get(cid=cid)
+    except ValueError:
+        return redirect('admindash:admin_category_list')
+    category.delete()
+
+    return redirect('admindash:admin_category_list')
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def available_category(request,cid):
+    if not request.user.is_authenticated:
+        return HttpResponse("Unauthorized", status=401)
+    
+    category = get_object_or_404(Category, cid=cid)
+    
+    if category.is_blocked:
+        category.is_blocked=False
+       
+    else:
+        category.is_blocked=True
+    category.save()
+
+    
+    # cat_list=Category.objects.filter(parent_id=category_id)
+    # for i in cat_list.values():
+    #     print(i)
+    
+    # for category in cat_list:
+    #     if category.is_available:
+    #         category.is_available=False
+    #     else:
+    #         category.is_available=True
+    #     category.save()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+
+
+
     
     
     

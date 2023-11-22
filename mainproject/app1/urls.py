@@ -11,7 +11,15 @@ urlpatterns = [
    path('product/<pid>/', views.product_detail, name = 'product-detail'),
   
   path('category/', views.category_list, name = 'category-list'),
-   path('category/<cid>/', views.category_product_list, name = 'category-product-list')
+   path('category/<cid>/', views.category_product_list, name = 'category-product-list'),
+   
+   #search 
+   
+  path('search/',views.search_view,name='search'),
+  
+  #filter
+  
+  path('filter-products/', views.filter_product,name='filter-product')
   
 
   

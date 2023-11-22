@@ -25,7 +25,11 @@
                         <div class="loop-grid loop-list pr-30">
                           {% for c in category %}
                             <article class="wow fadeIn animated hover-up mb-30">
+                                {% if c.image %}
                                 <div class="post-thumb" style="background-image: url({{c.image.url}});">
+                                    {% else %}
+                                    <p>No image</p>
+                                    {% endif %}
                                     <div class="entry-meta">
                                         <a class="entry-meta meta-2" href="{% url 'app1:category-product-list' c.cid %}">{{c.title}}</a>
                                     </div>

@@ -79,23 +79,25 @@
                                     </td>
                                     
                                     <td>
-                                      <p>available</p>
+                                      <!-- <p>available</p> -->
                                         <!-- <button  class="{% if not category.is_available %}btn btn-outline-danger{% else %}btn btn-outline-success{% endif %}">
                                             {% if not category.is_available %}Not Available {% else %}Available{% endif %}
                                         </button> -->
                                     </td>
                                     <td class="text-end" >
                                         <div class="dropdown">
+                                         
                                             <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                             <div class="dropdown-menu">
                                                 <a class="dropdown-item" href="#">View detail</a>
-                                                <a class="dropdown-item" href="">edit_info</a>
+                                                <a class="dropdown-item" href="{% url 'admindash:admin_category_edit' category.cid  %}">edit_info</a>
 
 
-                                                <a class="dropdown-item" href="">{% if not category.is_available %}Mark Available {% else %}Mark Unavailable{% endif %}</a>
-                                                <a class="dropdown-item text-danger" href="">Delete</a>
+                                                <a class="dropdown-item" href="{% url 'admindash:block_unblock_category' category.cid %}">{% if not category.is_blocked %} Available {% else %} Unavailable{% endif %}</a>
+                                                <a class="dropdown-item text-danger" href="{% url 'admindash:admin_delete_category' category.cid %}">Delete</a>
                                             </div>
                                         </div> <!-- dropdown //end -->
+                                     
                                     </td>
                                 </tr>
                                 {% endfor %}

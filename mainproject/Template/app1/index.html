@@ -751,7 +751,11 @@
                         {% for c in categories %}
                         <div class="card-1">
                             <figure class=" img-hover-scale overflow-hidden">
+                                {% if c.image %}
                                 <a href="{% url 'app1:category-product-list' c.cid %}"><img src="{{c.image.url}}" alt=""></a>
+                                {% else %}
+                                <p>No image</p>
+                                {% endif %}
                             </figure>
                             <h5><a href="{% url 'app1:category-product-list' c.cid %}">{{c.title}}</a></h5>
                         </div>
