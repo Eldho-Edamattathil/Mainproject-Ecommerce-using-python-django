@@ -5,7 +5,8 @@ from django.views.decorators.cache import cache_control
 from admindash.forms import CreateProductForm,ProductImagesForm
 from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import inlineformset_factory
-
+from django.contrib import messages
+from django.core.paginator import Paginator
 
 
 @login_required(login_url='adminside:admin_login')  # Use the named URL pattern
@@ -28,8 +29,13 @@ def dashboard(request):
 def admin_products_list(request):
   
   products = Product.objects.all()
+  p=Paginator(Product.objects.all(),10)
+  page=request.GET.get('page')
+  productss=p.get_page(page)
+  
   context ={
-    "products":products 
+    "products":products ,
+    "productss":productss
   }
   return render(request,'adminside/admin_products_list.html', context)
 
@@ -38,14 +44,59 @@ def admin_products_list(request):
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+# def admin_products_details(request, pid):
+#     print(pid)
+#     if not request.user.is_authenticated:
+#         return redirect('adminside:admin_login')
+
+#     try:
+#         product = Product.objects.get(pid=pid)
+       
+#     except Product.DoesNotExist:
+#         return HttpResponse("Product not found", status=404)
+
+#     if request.method == 'POST':
+#         form = CreateProductForm(request.POST, request.FILES, instance=product)
+#         if form.is_valid():
+#             # Save the form including the image
+#             product = form.save(commit=False)
+#             product_image = form.cleaned_data['new_image']
+#             if product_image is not None:
+#                 product.image=product_image
+            
+#             product.save()
+            
+#             return redirect('admindash:admin_products_list')
+#         else:
+#             print(form.errors)
+#             context = {
+#                 'form': form,
+#                 'product': product,
+                
+#             }
+#             return render(request, 'adminside/admin_products_details.html', context)
+
+#     else:
+#         initial_data = {'new_image': product.image.url if product.image else ''}
+#         form = CreateProductForm(instance=product, initial=initial_data)
+#         # print(form)
+    
+#     context = {
+#         'form': form,
+#         'product': product,
+        
+#     }
+#     return render(request, 'adminside/admin_products_details.html', context)
+
+# gpt
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_products_details(request, pid):
-    print(pid)
     if not request.user.is_authenticated:
         return redirect('adminside:admin_login')
 
     try:
         product = Product.objects.get(pid=pid)
-       
+        product_images = ProductImages.objects.filter(product=product)
     except Product.DoesNotExist:
         return HttpResponse("Product not found", status=404)
 
@@ -56,31 +107,48 @@ def admin_products_details(request, pid):
             product = form.save(commit=False)
             product_image = form.cleaned_data['new_image']
             if product_image is not None:
-                product.image=product_image
-            
+                product.image = product_image
             product.save()
-            
+
+            # Update or create additional images
+            for i in product_images:
+                image_field_name = f'product_image{i.id}'
+                image = request.FILES.get(image_field_name)
+
+                if image:
+                    i.Images = image
+                    i.save()
+
             return redirect('admindash:admin_products_list')
         else:
             print(form.errors)
             context = {
                 'form': form,
                 'product': product,
-                
+                'product_images': product_images,
             }
             return render(request, 'adminside/admin_products_details.html', context)
-
     else:
         initial_data = {'new_image': product.image.url if product.image else ''}
         form = CreateProductForm(instance=product, initial=initial_data)
-        # print(form)
-    
+
     context = {
         'form': form,
         'product': product,
-        
+        'product_images': product_images,
     }
     return render(request, 'adminside/admin_products_details.html', context)
+
+
+#gtp
+
+
+
+
+
+
+
+
 
 # def admin_products_details(request, pid):
 #     print(pid)
@@ -154,49 +222,130 @@ def block_unblock_products(request, pid):
     
     
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
+# def add_product(request):
+#     if not request.user.is_authenticated:
+#         return HttpResponse("Unauthorized", status=401)
+#     categories = Category.objects.all()
+   
+
+#     if request.method == 'POST':
+#         product_name= request.POST.get('title')
+#         product_stock_count= request.POST.get('stock_count')
+#         description= request.POST.get('description')
+#         max_price= request.POST.get('old_price')
+#         sale_price= request.POST.get('price')
+#         category_name= request.POST.get('category')
+        
+       
+       
+
+#         category = get_object_or_404(Category, title=category_name)
+        
+
+#         product = Product(
+#             title=product_name,
+#             stock_count=product_stock_count,
+#             category=category,
+            
+#             description=description,
+#             old_price=max_price,
+#             price=sale_price,
+#             image=request.FILES['image_feild']  # Make sure your file input field is named 'product_image'
+#         )
+#         product.save()
+        
+
+#         return redirect('admindash:admin_products_list')
+#     else:
+#         form=CreateProductForm()
+#     content = {
+#         'categories': categories,
+          
+#         'form': form
+#     }
+#     return render(request,'adminside/admin_add_product.html', content)
+
+
+# new add produt
+
 def add_product(request):
     if not request.user.is_authenticated:
         return HttpResponse("Unauthorized", status=401)
+
     categories = Category.objects.all()
-   
 
     if request.method == 'POST':
-        product_name= request.POST.get('title')
-        # product_sk_id= request.POST.get('sku')
-        description= request.POST.get('description')
-        max_price= request.POST.get('old_price')
-        sale_price= request.POST.get('price')
-        category_name= request.POST.get('category')
-       
-       
+        product_name = request.POST.get('title')
+        product_stock_count = request.POST.get('stock_count')
+        description = request.POST.get('description')
+        max_price = request.POST.get('old_price')
+        sale_price = request.POST.get('price')
+        category_name = request.POST.get('category')
+        # validations
+        validation_errors = []
+
+        try:
+            product_stock_count = int(product_stock_count)
+            if product_stock_count < 0:
+                validation_errors.append("Stock Count must be a non-negative integer.")
+
+            max_price = float(max_price)
+            if max_price < 0:
+                validation_errors.append("Max Price must be a non-negative number.")
+
+            sale_price = float(sale_price)
+            if sale_price < 0:
+                validation_errors.append("Sale Price must be a non-negative number.")
+        except ValueError as e:
+            validation_errors.append(str(e))
+
+        if validation_errors:
+            form = CreateProductForm()
+            content = {
+                'categories': categories,
+                'form': form,
+                'additional_image_count': range(1, 4),
+                'error_messages': validation_errors,
+            }
+            return render(request, 'adminside/admin_add_product.html', content)
+        
+        # till here
+        
 
         category = get_object_or_404(Category, title=category_name)
-        
 
         product = Product(
             title=product_name,
-            # sku=product_sk_id,
+            stock_count=product_stock_count,
             category=category,
-            
             description=description,
             old_price=max_price,
             price=sale_price,
-            image=request.FILES['image_feild']  # Make sure your file input field is named 'product_image'
+            image=request.FILES['image_feild']
         )
         product.save()
 
+        # Handling additional images
+        additional_image_count = 5  # Change this to the desired count of additional images
+        for i in range(1, additional_image_count + 1):
+            image_field_name = f'product_image{i}'
+            image = request.FILES.get(image_field_name)
+            if image:
+                ProductImages.objects.create(product=product, Images=image)
+
         return redirect('admindash:admin_products_list')
     else:
-        form=CreateProductForm()
+        form = CreateProductForm()
+
     content = {
         'categories': categories,
-          
-        'form': form
+        'form': form,
+         'additional_image_count': range(1, 4), 
     }
-    return render(request,'adminside/admin_add_product.html', content)
+    return render(request, 'adminside/admin_add_product.html', content)
 
 
-
+#ends here
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -228,11 +377,18 @@ def admin_category_list(request):
 def admin_add_category(request):
     if request.method == 'POST':
         cat_title = request.POST.get('category_name')
+        if Category.objects.filter(title=cat_title).exists():
+            messages.error(request, 'Category with this title already exists.')
+        else:
+            cat_data = Category(title=cat_title, image=request.FILES.get('category_image'))
+            cat_data.save()
+            messages.success(request, 'Category added successfully.')
         
-        cat_data = Category(title=cat_title,
-                            image=request.FILES.get('category_image'))
+        
+        # cat_data = Category(title=cat_title,
+        #                     image=request.FILES.get('category_image'))
     
-        cat_data.save()
+        # cat_data.save()
     else:
         return render(request, 'adminside/admin_category_list.html')
     

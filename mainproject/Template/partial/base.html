@@ -216,7 +216,7 @@
                               </ul>
                           </li>
                           
-                          {% if request.session.otp or request.user.is_authenticated %}
+                          {% if request.session.email or request.user.is_authenticated %}
 
                           <li><i class="fi-rs-user"></i><a href="{%url 'userauths:logout' %}">Sign Out</a></li>
                           
@@ -643,9 +643,10 @@
           <div class="row">
               <div class="col-lg-4 col-md-6">
                   <div class="widget-about font-md mb-md-5 mb-lg-0">
-                      <div class="logo logo-width-1 wow fadeIn animated">
+                      <!-- <div class="logo logo-width-1 wow fadeIn animated">
                           <a href="index.html"><img src="{% static 'assets/imgs/theme/logo.svg' %}" alt="logo"></a>
-                      </div>
+                      </div> -->
+                      <h3>Autoparts</h3>
                       <h5 class="mt-20 mb-10 fw-600 text-grey-4 wow fadeIn animated">Contact</h5>
                       <p class="wow fadeIn animated">
                           <strong>Address: </strong>562 Wellington Road, Street 32, San Francisco

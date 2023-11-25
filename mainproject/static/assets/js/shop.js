@@ -111,7 +111,7 @@ $(document).ready(function (){
             let filter_key = $(this).data("filter")
            
 
-            filter_object[filter_key]=Array.from (document.querySelectorAll('input[data-filter=' + filter_key + ']:checked')).map(function(element){
+            filter_object[filter_key]=Array.from (document.querySelectorAll('input[data-filter="' + filter_key + '"]:checked')).map(function(element){
                 return element.value
             })
 
@@ -134,6 +134,7 @@ $(document).ready(function (){
                 console.log("Response Data:", response.data);
 
             }
+
         })
 
     })    
@@ -141,6 +142,35 @@ $(document).ready(function (){
 })
 
         
+
+// $(document).ready(function() {
+//     // Function to update products based on the selected price range
+//     function updateProducts(minPrice, maxPrice) {
+//         $.ajax({
+//             url: '{% url "filter_products" %}',
+//             data: { min_price: minPrice, max_price: maxPrice },
+//             dataType: 'json',
+//             success: function(data) {
+//                 // Handle the updated product data
+//                 console.log(data.products);
+//                 // Implement logic to update the displayed products on the page
+//             },
+//             error: function(error) {
+//                 console.log('Error fetching products:', error);
+//             }
+//         });
+//     }
+
+//     // Event listener for price range changes
+//     $('#price-slider').on('slideStop', function(event) {
+//         // Get the selected price range
+//         var minPrice = event.value[0];
+//         var maxPrice = event.value[1];
+
+//         // Update products based on the selected price range
+//         updateProducts(minPrice, maxPrice);
+//     });
+// });
 
     
 

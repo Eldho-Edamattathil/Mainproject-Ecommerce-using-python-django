@@ -74,6 +74,10 @@
 		}
 	</style>
 
+	
+
+
+
 </head>
 <body>
 	<div class="container h-100">
@@ -82,7 +86,7 @@
 				<div class="d-flex justify-content-center" >
 
 
-					<strong><h3 id="form-title" style="color: black;">LOGIN</h3></strong>
+					<strong><h3 id="form-title" style="color: black;">Login</h3></strong>
 				</div>
 				<div class="d-flex justify-content-center form_container">
 					<form method="POST" action="" style="width: 320px;">
@@ -93,15 +97,15 @@
 							</div> -->
 							<input type="email" name="email" placeholder="Email..." class="form-control">
 						</div>
-						<div class="input-group mb-2">
-							<!-- <div class="input-group-append">
+						<!-- <div class="input-group mb-2">
+							 <div class="input-group-append">
 								<span class="input-group-text"><i class="fas fa-key"></i></span>
 							</div> -->
-								<input type="password" name="password" placeholder="Password..." class="form-control" >
-						</div>
+								<!-- <input type="password" name="password" placeholder="Password..." class="form-control" >
+						</div> --> 
 
 							<div class="d-flex justify-content-center mt-3 login_container">
-				 				<input class="btn btn-success login_btn" type="submit" value="Login" style="color: #1271ba;">
+				 				<input class="btn btn-success login_btn" type="submit" value="Send OTP" style="color: #1271ba;">
 				   			</div>
 					</form>
 
@@ -117,9 +121,11 @@
 				<div class="mt-4">
 					<div class="d-flex justify-content-center links">
 						Don't have an account? <a href="{% url 'userauths:signup' %}" class="ml-2">Sign Up</a>
+            
 					</div>
-					<div class="d-flex justify-content-center links">
-						 <a href="{% url 'userauths:login_otp' %}" class="ml-2">Login with OTP</a>
+          <div class="d-flex justify-content-center links">
+						<a href="{% url 'userauths:login' %}" class="ml-2">Back</a>
+            
 					</div>
 					
 			
@@ -130,4 +136,3 @@
 </body>
 
 </html>
-

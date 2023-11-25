@@ -55,6 +55,14 @@ class Tags(models.Model):
     
     
 class Product(models.Model):
+  
+  Varients =(
+    ('None','None'),
+    ('Size','Size')
+  )
+  
+  
+  
   pid = ShortUUIDField(unique =True, max_length = 20)
   user = models.ForeignKey(User, on_delete = models.SET_NULL,null =True)
   category = models.ForeignKey(Category, on_delete = models.SET_NULL,null = True, related_name ="category")
@@ -72,6 +80,7 @@ class Product(models.Model):
   mfd=models.DateTimeField(auto_now_add=False,null=True, blank=True)
   return_policy= models.CharField(max_length = 100,default = "10", null=True, blank=True)
   warrenty = models.CharField(max_length = 100,default = "1", null=True, blank=True)
+  varient=models.CharField(max_length=20,choices=Varients,default='None')
   
   
   
@@ -112,6 +121,46 @@ class ProductImages(models.Model):
   
   class Meta:
     verbose_name_plural = "Product Images"
+    
+    
+class Size(models.Model):
+  # sid = models.AutoField(primary_key=True)
+  value = models.CharField(max_length=50,null =True,blank=True) 
+  code = models.CharField(max_length=10, null=True, blank=True)
+  
+  def __str__(self):
+      return self.value 
+    
+class Varients(models.Model):
+  title =models.CharField(max_length=100,blank=True, null=True)
+  product = models.ForeignKey(Product,on_delete=models.CASCADE)
+  size=models.ForeignKey(Size,on_delete=models.CASCADE,blank=True,null=True)
+  image_id =models.IntegerField(default = 0,blank=True,null=True)
+  stock_count =models.IntegerField (default=1)
+  price =models.FloatField(default=0)
+  old_price =models.FloatField(default =0)
+  
+  
+  # def image(self):
+  
+  #   if self.image is not None:
+  #     pass
+      
+  def image(self):
+    img=ProductImages.objects.get(id =self.image_id)
+    if img.id is not None:
+      varimage = img.Images.url  
+    else:
+      varimage=''
+    return varimage
+      
+      
+  def varient_image(self):
+    return mark_safe('<img src= "%s" width="50" height= "50" />' % (self.image.url)) 
+    
+    
+  def __str__(self):
+    return self.title
   
 
 ####################cart, Order, OrderItems, address################ 

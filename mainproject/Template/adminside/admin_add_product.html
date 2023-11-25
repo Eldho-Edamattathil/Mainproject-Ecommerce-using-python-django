@@ -8,6 +8,15 @@
             <div class="content-header">
                 <h2 class="content-title">Add New Product</h2>
                 <div>
+                    {% if error_messages %}
+                 <div class="alert alert-danger">
+                <ul>
+                {% for error_message in error_messages %}
+                    <li>{{ error_message }}</li>
+                {% endfor %}
+                </ul>
+                </div>
+                {% endif %}
                     
                    
                 </div>
@@ -26,19 +35,20 @@
                             
                                 <div class="mb-4">
                                     <label for="{{form.title.id_for_label}}" class="form-label">Product name</label>
-                                    <input placeholder="" type="text" class="form-control" name="title" required="True">
+                                    <input placeholder="Product name" type="text" class="form-control" name="title" required="True">
                                    
                                     <div class="row gx-2">
                                          
                                     </div>
                                 </div>
                             </div>
-                            <!-- <div class="col-lg-6">
+                            <div class="col-lg-6">
                                 <div class="mb-4">
-                                    <label for="{{form.sku.id_for_label}}" class="form-label">SKU_id / Model number </label>
-                                    <input placeholder="" type="text" class="form-control" name="sku" required="True">
+                                    <label for="{{form.stock_count.id_for_label}}" class="form-label">Stock Count </label>
+                                    <input placeholder="Stock Count" type="text" class="form-control" name="stock_count" required="True" min="0">
+                                    
                                 </div>
-                            </div> -->
+                            </div>
                         </div>
                         <div class="mb-4">
                             <label for="{{form.description.id_for_label}}" class="form-label">Description</label>
@@ -49,14 +59,14 @@
                                 <div class="mb-4">
                                     <label for="{{form.old_price.id_for_label}}" class="form-label">Max price</label>
                                     <div class="row gx-2">
-                                        <input placeholder="$" type="text" class="form-control" name="old_price" required="True">
+                                        <input placeholder="$" type="text" class="form-control" name="old_price" required="True" min="0">
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-4">
                                     <label for="{{form.price.id_for_label}}" class="form-label">price</label>
-                                    <input placeholder="$" type="text" class="form-control" name="price" required="True">
+                                    <input placeholder="$" type="text" class="form-control" name="price" required="True" min="0">
                                 </div>
                             </div>
                         </div>  
@@ -92,14 +102,19 @@
                                                 {% endfor %}
                                             </select>
                                         </div>
-                                        <!-- <div class="col-sm-6 mb-3">
-                                            <label for="{{ form.product_brand.id_for_label }}" class="form-label">Brand</label>
-                                            <select class="form-select" name="product_brand" required="True">
-                                                {% for brand in brands %}
-                                                <option value="{{brand.brand_name}}">{{brand.brand_name}}</option>
+                                        <div class="card mb-4">
+                                            <div class="card-header">
+                                                <h4>Additional Images</h4>
+                                            </div>
+                                            <div class="card-body">
+                                                {% for i in additional_image_count %}
+                                                    <div class="input-upload">
+                                                        <label for="product_image{{ i }}">Product Image {{ i }}</label>
+                                                        <input class="form-control" type="file" name="product_image{{ i }}">
+                                                    </div>
                                                 {% endfor %}
-                                            </select>
-                                        </div> -->
+                                            </div>
+                                        </div>
                                         
                                     </div> <!-- row.// -->
                                 </div>

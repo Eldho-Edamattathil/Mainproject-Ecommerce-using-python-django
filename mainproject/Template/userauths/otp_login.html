@@ -75,6 +75,11 @@
             background-color: #0056b3;
         }
     </style>
+    <script>
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -82,7 +87,7 @@
           <h2 class="font-weight-bold" style="padding-left: 20px;">Confirm Your Account</h2>
         </div>
     
-        <form action="{% url 'userauths:otp_verification' %}" method="POST" class="mt-4">
+        <form action="{% url 'userauths:otp_verification_login' %}" method="POST" class="mt-4">
           {% csrf_token %}
           <div class="form-group text-center">
             <label for="otp" class="font-weight-bold" style="padding: 30%;">Enter the OTP</label><br>

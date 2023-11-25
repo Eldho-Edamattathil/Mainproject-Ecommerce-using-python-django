@@ -19,7 +19,7 @@
                 <div class="card-header">
                     <h4>Product Details</h4>
                 </div>
-                {{form.errors}}
+                <!-- {{form.errors}} -->
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
@@ -50,6 +50,7 @@
                                 <div class="mb-4">
                                     <label for="{{form.stock_count.id_for_label}}" class="form-label">Stock Count </label>
                                     {{form.stock_count}}
+                                    {{ form.stock_count.errors }}
                                 </div>
                             </div>
                         </div>
@@ -63,6 +64,7 @@
                                     <label for="{{ form.old_price.id_for_label }}" class="form-label">Max price</label>
                                     <div class="row gx-2">
                                         {{form.old_price}}
+                                        {{form.old_price.errors}}
                                     </div>
                                 </div>
                             </div>
@@ -70,6 +72,7 @@
                                 <div class="mb-4">
                                     <label for="{{form.price.id_for_label}}" class="form-label">Sale price</label>
                                     {{form.price}}
+                                    {{form.price.errors}}
                                 </div>
                             </div>
                         </div>
@@ -82,6 +85,30 @@
                                             <p>No image available</p>
                                             {% endif %}
                                 </div>
+
+                                <!-- try -->
+                                <div class="card-header">
+                                    <h4>Additional Images</h4>
+                                </div>
+                                <div class="card-body">
+                                    {% for i in product_images %}
+                                        <div class="input-upload">
+                                            <label for="product_image{{ i.id }}">Product Images </label>
+                                            <input class="form-control" type="file" name="product_image{{ i.id }}">
+                                            {% if i.Images %}
+                                                <p>Existing Image:</p>
+                                                <img src="{{ i.Images.url }}" class="img-sm img-thumbnail" alt="">
+                                                <input type="hidden" name="product_image{{ i.id }}" value="{{ i.Images.url }}">
+                                            {% else %}
+                                                <input type="hidden" name="product_image{{ i.id }}" value="">
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- try -->
+
+
                             </div>
                             <div class="col-lg-6">
                                 <div class="mb-4">
@@ -96,24 +123,10 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            
-                            
+                            >
                         </div>
                         <!-- multiimages -->
-                        <!-- <div class="row">
-                            <div class="col-lg-6">
-                                <div class="mb-4">
-                                    <label for="product_images">Product Images</label>
-                                    {{ product_images_formset.management_form }}
-                                    {% for form in images_formset %}
-                                        {{ form.as_p }}
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            
-                    </div> -->
-
+                        
 
 
 

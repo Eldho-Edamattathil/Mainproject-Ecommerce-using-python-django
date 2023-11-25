@@ -18,6 +18,15 @@
                 <div class="col-md-3">
                     <form method="post" action="{% url 'admindash:admin_add_category'  %}"enctype="multipart/form-data">
                       {% csrf_token %}
+                      {% if messages %}
+                    <div class="messages">
+                 {% for message in messages %}
+                    <div class="{% if message.tags %}alert alert-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                    </div>
+                    {% endfor %}
+                    </div>
+                    {% endif %}
                         <div class="mb-4">
                             <label for="product_name" class="form-label">Category Name</label>
                             <input type="text" placeholder="Type here" class="form-control" id="product_name" name="category_name"/>
@@ -89,7 +98,7 @@
                                          
                                             <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
                                             <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="#">View detail</a>
+                                                <!-- <a class="dropdown-item" href="#">View detail</a> -->
                                                 <a class="dropdown-item" href="{% url 'admindash:admin_category_edit' category.cid  %}">edit_info</a>
 
 

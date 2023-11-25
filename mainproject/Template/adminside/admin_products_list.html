@@ -60,7 +60,7 @@
                                 <tbody>
                                     <tr><p>Click to view details</p></tr>
                                     
-                                    {% for product in products %}
+                                    {% for product in productss %}
                                     <tr>
                                         <td>
                                             {% if product.image %}
@@ -90,7 +90,7 @@
              <!-- itemlist  .// -->
         </div> <!-- card-body end// -->
     </div> <!-- card end// -->
-    <div class="pagination-area mt-30 mb-50">
+    <!-- <div class="pagination-area mt-30 mb-50">
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-start">
                 <li class="page-item active"><a class="page-link" href="#">01</a></li>
@@ -101,7 +101,23 @@
                 <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
             </ul>
         </nav>
-    </div>
+    </div> -->
 </section> 
+<br/><br/>
+
+
+{% if productss.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{products.previous_page_number}}">Previous</a>
+
+
+{%  endif %}
+Page {{productss.number}} of {{productss.paginator.num_pages}}
+{% if productss.has_next %}
+<a href="?page={{productss.next_page_number}}">Next</a>
+<a href="?page={{productss.paginator.num_pages}}">Last  &raquo</a>
+
+{% endif %}
+
 
 {% endblock %}
