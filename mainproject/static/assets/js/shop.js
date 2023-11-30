@@ -176,3 +176,225 @@ $(document).ready(function (){
 
 
 
+
+// $(document).ready(function () {
+//     $(document).on('change', '#size-selection', function () {
+//         var selectedSize = $(this).val();
+//         var productId = '{{ product.pid }}';
+
+//         $.ajax({
+//             url: '{% url "get_variant_details" product.pid %}',
+//             type: 'GET',
+//             data: {
+//                 'product_id': productId,
+//                 'variant': selectedSize
+//             },
+//             dataType: 'json',
+//             success: function (data) {
+//                 // Update the UI with variant details
+//                 $('#stock-count-display').text('Stock Count: ' + data.stock_count);
+//                 $('#price-display').text('Price: ' + data.price);
+//                 // Update other UI elements as needed
+//             },
+//             error: function (error) {
+//                 console.log('Error:', error);
+//             }
+//         });
+//     });
+// });
+
+// document.addEventListener('DOMContentLoaded', function () {
+//     var sizeSelection = document.getElementById('size-selection');
+//     var variantDetails = document.querySelectorAll('.variant-details');
+
+//     sizeSelection.addEventListener('change', function () {
+//         var selectedSize = sizeSelection.value;
+
+//         // Hide all variant details
+//         variantDetails.forEach(function (variant) {
+//             variant.style.display = 'none';
+//         });
+
+//         // Show the selected variant details
+//         var selectedVariant = document.querySelector('.variant-details[data-size="' + selectedSize + '"]');
+//         if (selectedVariant) {
+//             selectedVariant.style.display = 'block';
+//         }
+//     });
+// });
+
+
+
+// $("#add-to-cart-btn").on("click", function(){
+
+//     let quantity = $("#product-quantity").val()
+//     let product_title=$(".product-title").val()
+//     let product_id=$(".product-id").val()
+//     let product_price =$("#current-product-price").text()
+//     let this_value =$(this)
+
+
+//     console.log("quantity:",quantity);
+//     console.log("title:", product_title);
+//     console.log("id:", product_id);
+//     console.log("price:", product_price);
+//     console.log("Current element:", this_value);
+   
+
+//     $.ajax({
+//         url: '/add-to-cart',
+//         data:{
+//             'id':product_id,
+//             'qty':quantity,
+//             'title':product_title,
+//             'price':product_price,
+//         },
+//         datatype: 'json',
+//         beforeSend: function(){
+//             console.log ("adding product to cart...");
+//         },
+//         success: function(response){
+//             console.log(response);
+//             this_value.html("item added to cart")
+//             console.log("Added Product to Cart")
+//             $(".cart-items-count").text(response.totalcartitems)
+//         }
+//     })
+   
+// })
+
+
+$(".add-to-cart-btn").on("click", function(){
+
+    let this_val =$(this)
+    let index =this_val.attr("data-index")
+    let quantity = $(".product-quantity-" + index).val()
+
+
+    
+    let product_title=$(".product-title-" + index).val()
+    let product_id=$(".product-id-" + index).val()
+    // let product_price =$(".current-product-price-" + index).text()
+    let product_price = parseFloat($(".current-product-price-" + index).text());
+    let product_pid =$(".product-pid-" + index).val()
+    let product_image=$(".product-image-" + index).val()
+    
+
+    console.log("quantity:",quantity);
+    console.log("title:", product_title);
+    console.log("id:", product_id);
+    console.log("pid:", product_pid);
+    console.log("image:", product_image);
+    console.log("price:", product_price);
+    console.log("Current element:", this_val);
+   
+
+    $.ajax({
+        url: '/add-to-cart',
+        data:{
+            'id':product_id,
+            'pid':product_pid,
+            'image':product_image,
+            'qty':quantity,
+            'title':product_title,
+            'price':product_price,
+        },
+        datatype: 'json',
+        beforeSend: function(){
+            console.log ("adding product to cart...");
+        },
+        success: function(response){
+            console.log(response);
+            this_val.html("✔")
+            console.log("Added Product to Cart")
+            $(".cart-items-count").text(response.totalcartitems)
+        }
+    })
+   
+})
+
+
+
+// delete product from cart
+
+$(document).on("click", ".delete-product", function () {
+    let thisVal = $(this);
+    let productId = thisVal.attr("data-product");
+
+    console.log("productId:", productId);
+
+    $.ajax({
+        url: "/delete-from-cart",
+        data: {
+            "id": productId
+        },
+        dataType: "json",
+        beforeSend: function () {
+            thisVal.hide();
+        },
+        success: function (response) {
+            thisVal.show();
+            $(".cart-items-count").text(response.totalcartitems);
+            $("#cart-list").html(response.data);
+        },
+        error: function (error) {
+            console.log('Error:', error);
+        }
+    });
+});
+
+
+
+
+
+
+
+
+
+
+// update cart
+
+
+$(document).on("click", ".quantity-control .quantity-btn", function () {
+    let action = $(this).data("action");
+    let productId = $(this).data("product-id");
+    let quantityInput = $(".product-qty-" + productId);
+    let currentQty = parseInt(quantityInput.val());
+
+    if (action === "increase") {
+        quantityInput.val(currentQty + 1);
+    } else if (action === "decrease" && currentQty > 1) {
+        quantityInput.val(currentQty - 1);
+    }
+
+    updateCart(productId, quantityInput.val());
+});
+
+function updateCart(productId, newQuantity) {
+    $.ajax({
+        url: "/update-cart",
+        data: {
+            "id": productId,
+            "qty": newQuantity
+        },
+        dataType: "json",
+        beforeSend: function () {
+            // Handle any actions before making the AJAX request, e.g., show loader
+        },
+        success: function (response) {
+            // Handle success, e.g., update the UI with the new cart data
+            $(".cart-items-count").text(response.totalcartitems);
+            $("#cart-list").html(response.data);
+        },
+        error: function (error) {
+            // Handle error, e.g., show an alert or log the error
+            console.log('Error:', error);
+        },
+        complete: function () {
+            // Handle any actions after the AJAX request, e.g., hide loader
+        }
+    });
+}
+
+
+

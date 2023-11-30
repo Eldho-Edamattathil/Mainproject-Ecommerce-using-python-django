@@ -125,42 +125,30 @@ class ProductImages(models.Model):
     
 class Size(models.Model):
   # sid = models.AutoField(primary_key=True)
-  value = models.CharField(max_length=50,null =True,blank=True) 
+  value = models.CharField(max_length=50,null =True,blank=True, default ='None') 
   code = models.CharField(max_length=10, null=True, blank=True)
   
   def __str__(self):
       return self.value 
     
-class Varients(models.Model):
-  title =models.CharField(max_length=100,blank=True, null=True)
-  product = models.ForeignKey(Product,on_delete=models.CASCADE)
-  size=models.ForeignKey(Size,on_delete=models.CASCADE,blank=True,null=True)
-  image_id =models.IntegerField(default = 0,blank=True,null=True)
-  stock_count =models.IntegerField (default=1)
-  price =models.FloatField(default=0)
-  old_price =models.FloatField(default =0)
-  
-  
-  # def image(self):
-  
-  #   if self.image is not None:
-  #     pass
-      
-  def image(self):
-    img=ProductImages.objects.get(id =self.image_id)
-    if img.id is not None:
-      varimage = img.Images.url  
-    else:
-      varimage=''
-    return varimage
-      
-      
-  def varient_image(self):
-    return mark_safe('<img src= "%s" width="50" height= "50" />' % (self.image.url)) 
-    
-    
-  def __str__(self):
-    return self.title
+class Variants(models.Model):
+    title = models.CharField(max_length=100, blank=True, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, blank=True, null=True)
+    image_id = models.ForeignKey(ProductImages,on_delete=models.CASCADE, blank=True, null=True)
+    stock_count = models.IntegerField(default=1)
+    price = models.FloatField(default=0)
+    old_price = models.FloatField(default=0)
+
+    def image(self):
+        img = ProductImages.objects.filter(variant=self).first()
+        return img.Images.url if img else ''
+
+    def variant_image(self):
+        return mark_safe('<img src="%s" width="50" height="50" />' % self.image())
+
+    def __str__(self):
+        return self.title
   
 
 ####################cart, Order, OrderItems, address################ 

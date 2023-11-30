@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.conf import settings
 # Register your models here.
 from django.contrib.auth import get_user_model
-from app1.models import Product, Category, ProductImages,Size,Varients
+from app1.models import Product, Category, ProductImages,Size,Variants
 
 
 admin.site.register(get_user_model())
@@ -11,7 +11,7 @@ class ProductImagesAdmin(admin.TabularInline):
   model = ProductImages
   
 class ProductVarientsAdmin(admin.TabularInline):
-  model = Varients
+  model = Variants
   
 
   
@@ -25,7 +25,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class SizeAdmin(admin.ModelAdmin):
   list_display = ['value', 'code']
   
-class VarientAdmin(admin.ModelAdmin):
+class VariantAdmin(admin.ModelAdmin):
   list_display = ['title', 'product','size','image_id','stock_count','price','old_price']
 
 
@@ -36,7 +36,7 @@ class VarientAdmin(admin.ModelAdmin):
 admin.site.register(Product,ProductAdmin)
 admin.site.register(Category,CategoryAdmin)
 admin.site.register(Size,SizeAdmin)
-admin.site.register(Varients,VarientAdmin)
+admin.site.register(Variants,VariantAdmin)
 
 
 

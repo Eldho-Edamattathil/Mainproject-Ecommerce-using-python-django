@@ -11,8 +11,9 @@ from django.views.decorators.cache import cache_control
 
 
 def admin_login(request):
-    if request.user.is_authenticated and request.user.is_superadmin:
-        return redirect('admindash:dashboard')
+    if request.user.is_authenticated:
+        if not request.user.is_superadmin:
+            return redirect('admindash:dashboard')
 
     if request.method == "POST":
         email = request.POST['email']

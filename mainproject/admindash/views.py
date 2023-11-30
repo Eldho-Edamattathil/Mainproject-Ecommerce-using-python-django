@@ -300,12 +300,21 @@ def add_product(request):
             validation_errors.append(str(e))
 
         if validation_errors:
+            form_data = {
+                'title': product_name,
+                'stock_count': product_stock_count,
+                'description': description,
+                'old_price': max_price,
+                'price': sale_price,
+                'category': category_name,
+            }
             form = CreateProductForm()
             content = {
                 'categories': categories,
                 'form': form,
                 'additional_image_count': range(1, 4),
                 'error_messages': validation_errors,
+                'form_data': form_data,
             }
             return render(request, 'adminside/admin_add_product.html', content)
         
@@ -336,11 +345,20 @@ def add_product(request):
         return redirect('admindash:admin_products_list')
     else:
         form = CreateProductForm()
+        form_data = {
+            'title': '',
+            'stock_count': '',
+            'description': '',
+            'old_price': '',
+            'price': '',
+            'category': '',
+        }
 
     content = {
         'categories': categories,
         'form': form,
          'additional_image_count': range(1, 4), 
+         'form_data': form_data,
     }
     return render(request, 'adminside/admin_add_product.html', content)
 

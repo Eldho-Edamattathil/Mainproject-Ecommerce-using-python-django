@@ -57,17 +57,91 @@
                                                 <span class="font-small ml-5 text-muted"> (25 reviews)</span>
                                             </div>
                                         </div>
+
+                                        <!-- script for price -->
+                                        <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+                                        <script>
+                                            $(document).ready(function () {
+                                                $('#size-selection').change(function () {
+                                                    var selectedSize = $(this).val();
+                                        
+                                                    // Show the details for the selected variant
+                                                    $('.variant-details').hide();
+                                                    var selectedVariant = $('.variant-details[data-size="' + selectedSize + '"]');
+                                                    selectedVariant.show();
+                                        
+                                                    // Update the displayed price based on the selected variant
+                                                    if (selectedVariant.length > 0) {
+                                                        var variantPrice = selectedVariant.find('.price').text();
+                                                        $('.product-price .text-brand').text(variantPrice);
+                                                    } else {
+                                                        // If the selected size doesn't have a variant, revert to the default product price
+                                                        $('.product-price .text-brand').text('{{ product.price }}');
+                                                    }
+                                        
+                                                    // Update the stock count
+                                                    $('#stock-count-display').text('Stock Count: ' + selectedVariant.data('stock-count'));
+                                                });
+                                            });
+                                        </script> -->
+                                        <!-- ends here -->
+
+                                           <!-- {% if variants %}
+                                        <div class="clearfix product-price-cover">
+                                           
+                                            <div class="product-price primary-color float-left">
+                                                <ins><span class="text-brand" id="selected-variant-price">{{ product.price }}</span></ins>
+                                                <ins><span class="old-price font-md ml-15">{{ product.old_price }}</span></ins>
+                                                <span class="save-price font-md color3 ml-15">-{{ product.get_percentage|floatformat:0 }}%</span>
+                                            </div>
+                                            
+                                        </div>
+                                        {% else %} -->
+                                        <!-- if variants -->
                                         <div class="clearfix product-price-cover">
                                             <div class="product-price primary-color float-left">
-                                                <ins><span class="text-brand">{{product.price}}</span></ins>
+                                                <ins><span class="text-brand current-product-price-{{product.id}}">{{product.price}}</span></ins>
                                                 <ins><span class="old-price font-md ml-15">{{product.old_price}}</span></ins>
                                                 <span class="save-price  font-md color3 ml-15">-{{product.get_percentage|floatformat:0}}%</span>
                                             </div>
                                         </div>
+                                        <!-- {% endif %} -->
+                                        <!-- ends here -->
                                         <div class="bt-1 border-color-1 mt-15 mb-15"></div>
                                         <div class="short-desc mb-30">
                                             <p>{{product.description|truncatechars:30}}</p>
                                         </div>
+                                       <!-- variant button -->
+                                       <!-- {% if variants %} -->
+                                       <!-- <div class="size-selection mt-30">
+                                           <h4 class="font-lg mb-15">Choose Size:</h4>
+                                           <select name="size" id="size-selection" class="form-control" style="border: 1px solid #ccc;" required>
+                                               <option value="" selected disabled>Select Size</option>
+                                               {% for variant in variants %}
+                                                <option value="{{ variant.size }}">{{ variant.size }}</option>
+                                                 {% endfor %}
+                                           </select>
+                                       </div> -->
+                                   
+                                       <!-- varinat product -->
+                                       <!-- {% for variant in variants %}
+                                           <div class="variant-details" data-size="{{ variant.size.value }}" style="display: none;">
+                                               <p><strong>Stock Count:</strong> {{ variant.stock_count }}</p>
+                                               <p><strong>Price:</strong> {{ variant.price }}</p> -->
+                                               <!-- Add other variant details as needed -->
+                                           </div>
+                                       <!-- {% endfor %}
+                                   {% else %}
+                                       <div class="size-selection mt-30">
+                                           <h4 class="font-lg mb-15"> Size:</h4>
+                                           <select name="size" id="size-selection" class="form-control" style="border: 1px solid #ccc;" required>
+                                               <option value="onesize" selected disabled>One Size</option>
+                                           </select>
+                                       </div>
+                                   {% endif %} -->
+                               
+                               
+                                       <!-- till here -->
                                         <div class="product_sort_info font-xs mb-30">
                                             <ul>
                                                 <li class="mb-10"><i class="fi-rs-crown mr-5"></i>{{product.warrenty}} Year Warranty</li>
@@ -80,19 +154,30 @@
                                                 </li>
                                             </ul>
                                         </div>
-                                        
+                                        <div>
+                                            <input type="number" value="1" name="" id="product-quantity" class="w-25 mb-20 product-quantity-{{product.id}}">
+                                        </div>
                                         <div class="bt-1 border-color-1 mt-30 mb-30"></div>
                                         <div class="detail-extralink">
-                                            <div class="detail-qty border radius">
+                                            <!-- <div class="detail-qty border radius">
                                                 <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
                                                 <span class="qty-val">1</span>
                                                 <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                            </div>
+                                            </div> -->
+                                            >
                                             <div class="product-extra-link2">
                                               {% if product.stock_count == '0' %}
                                               <button type="submit" class="button button-add-to-cart" disabled>Out Of Stock</button>
                                                 {% else %}
-                                               <button type="submit" class="button button-add-to-cart">Add to cart</button>
+                                                <!-- <input type="hidden" value="{{product.id}}"  class="product-id" name="" id="">
+                                                <input type="hidden" value="{{product.title}}" class="product-title"  name="" id=""> -->
+                                                <!-- <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{product.id}}"> -->
+                                                <input type="hidden" class="product-pid-{{product.id}}" value="{{product.pid}}">
+                                                <input type="hidden" class="product-image-{{product.id}}" value="{{product.image.url}}">
+                                                <input type="hidden" class="product-id-{{product.id}}" value="{{product.id}}">
+                                                <input type="hidden" class="product-title-{{product.id}}" value="{{product.title}}">
+
+                                               <button type="submit" class="button button-add-to-cart add-to-cart-btn" data-index="{{product.id}}"   id="add-to-cart-btn">Add to cart</button>
                                                {% endif %}
 
                                                 <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
@@ -475,4 +560,9 @@
             </div>
         </section>
     </main>
+   
+    <!-- script for ajax -->
+
+     
+
    {% endblock %}

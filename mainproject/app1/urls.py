@@ -19,9 +19,24 @@ urlpatterns = [
   
   #filter
   
-  path('filter-products/', views.filter_product,name='filter-product')
-  
+  path('filter-products/', views.filter_product,name='filter-product'),
+  # ajax for vaiants
+  # path('get-variant-details/<str:product_id>/<str:variant_size>/', views.get_variant_details, name='get_variant_details'),
 
+  # add to cart
+  path('add-to-cart/', views.add_to_cart, name = 'add-to-cart'),
   
-
+  #cart view
+  path('cart/',views.cart_view,name ="cart"),
+  
+  path('delete-from-cart/', views.delete_item_from_cart, name="delete-from-cart"),
+  
+  
+  # update from cart
+  path('update-cart/', views.update_from_cart, name ="update-cart"),
+  
+  
+  #checkout
+  
+  path('checkout/',views.checkout_view,name= 'checkout')
 ]
