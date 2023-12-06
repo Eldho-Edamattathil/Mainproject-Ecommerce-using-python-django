@@ -36,8 +36,8 @@
                                   <td class="price" data-title="Price"><span>{{item.price|floatformat:2}} </span></td>
                                   <td class="text-center detail-info" data-title="Stock" >
                                       
-                                    <!-- <input type="number" class="w-25 product-qty-{{product_id}}" placeholder ="QTY" value="{{item.qty}}">
-                                          -->
+                                     <!-- <input type="number" class="w-25 product-qty-{{product_id}}" placeholder ="QTY" value="{{item.qty}}"> -->
+                                          
                                           <div class="quantity-control">
                                             <button class="quantity-btn" data-action="decrease" data-product-id="{{ product_id }}">-</button>
                                             <input type="number" class="w-25 product-qty-{{ product_id }}" placeholder="QTY" value="{{ item.qty }}" min="1" readonly>
@@ -47,8 +47,8 @@
                                   </td>
                                   <td class="text-right" data-title="Cart">
                                       <span>{% widthratio item.price 1 item.qty %} </span>
-                                  </td>
-                                  <!-- <td class="action" data-title="Remove"><button  class="text-muted update-product" data-product="{{product_id}}"  style="background: none; border: none"><i class="fi-rs-refresh"></i></button></td> -->
+                                  </td> 
+                                   <!-- <td class="action" data-title="Remove"><button  class="text-muted update-product" data-product="{{product_id}}"  style="background: none; border: none"><i class="fi-rs-refresh"></i></button></td>  -->
                                   <td class="action" data-title="Remove"><button  class="text-muted delete-product" data-product="{{product_id}}"  style="background: none; border: none"><i class="fi-rs-trash"></i></button></td>
                               </tr>
                               {% endfor %}
@@ -57,7 +57,46 @@
                                       <a href="#" class="text-muted"> <i class="fi-rs-cross-small"></i> Clear Cart</a>
                                   </td>
                               </tr>
-                          </tbody>
+                          </tbody>  
+
+                              <!-- new model -->
+                              <!-- <tbody>
+                                {% for cart_item in cart_items %}
+                                    <tr>
+                                        <td class="image product-thumbnail">
+                                            <img src="{{ cart_item.product.image.url }}" alt="#">
+                                        </td>
+                                        <td class="product-des product-name">
+                                            <h5 class="product-name">
+                                                <a href="{% url 'app1:product-detail' cart_item.product.pid %}">
+                                                    {{ cart_item.product.title }}
+                                                </a>
+                                            </h5>
+                                        </td>
+                                        <td class="price" data-title="Price">
+                                            <span>{{ cart_item.product.price|floatformat:2 }}</span>
+                                        </td>
+                                        <td class="text-center detail-info" data-title="Stock">
+                                            <div class="quantity-control">
+                                                <button class="quantity-btn" data-action="decrease" data-product-id="{{ cart_item.product.id }}">-</button>
+                                                <input type="number" class="w-25 product-qty-{{ cart_item.product.id }}" placeholder="QTY" value="{{ cart_item.quantity }}" min="1" readonly>
+                                                <button class="quantity-btn" data-action="increase" data-product-id="{{ cart_item.product.id }}">+</button>
+                                            </div>
+                                        </td>
+                                        <td class="text-right" data-title="Cart">
+                                            <span>{{ cart_item.product.price|floatformat:2 }} * {{ cart_item.quantity }} = {{ cart_item.total_price|floatformat:2 }}</span>
+                                        </td>
+                                        
+                                        
+                                        <td class="action" data-title="Remove">
+                                            <button class="text-muted delete-product" data-product="{{ cart_item.product.id }}" style="background: none; border: none">
+                                                <i class="fi-rs-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody> -->
+                              <!-- new model -->
                       </table>
                   </div>
                   <div class="cart-action text-end">
@@ -108,7 +147,7 @@
                                           </tr>
                                           <tr>
                                               <td class="cart_total_label">Total</td>
-                                              <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand">$240.00</span></strong></td>
+                                              <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand">${{cart_total_amount|floatformat:2}}</span></strong></td>
                                           </tr>
                                       </tbody>
                                   </table>

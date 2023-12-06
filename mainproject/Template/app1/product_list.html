@@ -22,6 +22,8 @@
                             <i class="fi-rs-angle-small-up angle-up"></i>
                         </a>
                         <div class="shop-product-fillter-header">
+                            
+                            
                             <div class="row">
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
                                     <h5 class="mb-20">Categories</h5>
@@ -37,37 +39,17 @@
                                 </div>
                                 
                                 <div class="col-lg-2 col-md-4 mb-lg-0 mb-md-5 mb-sm-5">
-                                    <!-- <h5 class="mb-20">Price range</h5>
-                                    <input type="range" id="range" class="slider-range" min="0" max="100"> -->
+                                     <h5 class="mb-20">Price range</h5> 
+                                    <input type="range" value="{{min_max_price.price__min}}"  id="range" class="slider-range" min="{{min_max_price.price__min}}" max="{{min_max_price.price__max}}" name="range" oninput="max_price.value=this.value"> 
                                     <div class="price-filter">
-                                        <h5 class="mb-20">Price Range</h5>
+                                        <div class="d-flex justify-content-between">
+                                       <div class="caption"> From: <strong id ="slider-range-value1" class="text-brand">${{min_max_price.price__min}}</strong></div>
+                                       <div class="caption"> To: <strong id ="slider-range-value1" class="text-brand">${{min_max_price.price__max|floatformat:2}}</strong></div>
+                                    </div>
                                         <div id="price-slider"></div>
-                                        <ul class="categor-list">
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-1" data-filter="price" value="0-20">
-                                                <label class="form-check-label" for="price-checkbox-1">$0 - $20</label>
-                                            </div>
+                                        <input type="number" value="{{min_max_price.price__min}}" class="range"  name="" id="max_price" min="{{min_max_price.price__min}}" max="{{min_max_price.price__max}}" placeholder="Current Price" onkeyup="range.value=this.value">
+                                    <button id="apply-filter-btn" class="btn btn-primary mt-5" type="button" >Apply Filter</button>
                                     
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-2" data-filter="price" value="21-50">
-                                                <label class="form-check-label" for="price-checkbox-2">$21 - $50</label>
-                                            </div>
-                                    
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-3" data-filter="price" value="51-70">
-                                                <label class="form-check-label" for="price-checkbox-3">$51 - $70</label>
-                                            </div>
-                                    
-                                            <div class="form-check">
-                                                <input type="checkbox" class="form-check-input filter-checkbox" id="price-checkbox-4" data-filter="price" value="81-100">
-                                                <label class="form-check-label" for="price-checkbox-4">$81 - $100</label>
-                                            </div>
-                                        
-                                    
-
-                                    
-                                    </ul>
-                                    <button id="apply-filter-btn" class="btn btn-primary">Apply Filter</button>
                                     </div>
 
                                 </div>
@@ -211,7 +193,12 @@
                                             <input type="hidden" class="product-image-{{p.id}}" value="{{p.image.url}}">
                                             <input type="hidden" class="product-id-{{p.id}}" value="{{p.id}}">
                                             <input type="hidden" class="product-title-{{p.id}}" value="{{p.title}}">
-                                            <button aria-label="Add To Cart" style="border-radius: 10%;width:100px;"   class="action-btn hover-up add-to-cart-btn btn-success" data-index="{{p.id}}" id="add-to-cart-btn">Add to Cart</button>
+                                            {% if p.stock_count == '0' %}
+                                              <h4>Out Of Stock</h4>
+                                              {% else %}
+                                              <button aria-label="Add To Cart" style="border-radius: 10%;width:100px;"   class="action-btn hover-up add-to-cart-btn btn-success" data-index="{{p.id}}" id="add-to-cart-btn">Add to Cart</button>
+                                            {% endif %}
+                                           
                                         </div>
                                     </div>
                                 </div>
@@ -247,6 +234,8 @@ Page {{productss.number}} of {{productss.paginator.num_pages}}
 <a href="?page={{productss.paginator.num_pages}}">Last  &raquo</a>
 
 {% endif %}
+
+
 
 
 

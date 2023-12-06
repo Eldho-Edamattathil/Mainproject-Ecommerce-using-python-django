@@ -1,0 +1,83 @@
+{% extends 'adminside/base.html' %}
+{% load static %}
+{% block title %} Product list {% endblock %}
+{% block  body %}
+    <main class="main">
+        
+        <section class="pt-150 pb-150">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-10 m-auto">
+                        <div class="row">
+                            
+                            <div class="col-md-12">
+                                
+                                    <div class="tab-pane " id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                                        <div class="card mb-10">
+                                            <div class="card-header">
+                                                <h5 class="mb-0"> Order List</h5>
+                                            </div>
+                                            {% for message in messages  %}
+                                            {{message}}
+                                            {% endfor  %}
+                                            <div class="card-body">
+                                                <div class="table-responsive">
+                                                    <table class="table wide-table" >
+                                                        <thead>
+                                                            <tr class="p-5">
+                                                                <th>User Email</th>
+                                                                <th>Order</th>
+                                                                <th>Date</th>
+                                                                <th>Paid Status</th>
+                                                                <th>Product Status</th>
+                                                                <th>Total</th>
+                                                                
+                                                                <th>More options</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                         
+                                                          {% for o in order  %}
+                                                            <tr>
+                                                                <td>{{o.user}}</td>
+                                                                <td>INVOICE_NO-{{o.id}}</td>
+                                                                <td>{{o.order_date}}</td>
+                                                                {% if paid_status %}
+                                                                <td>Payment Received</td>
+                                                                {% else %}
+                                                                <td class="text-danger" >X</td>
+                                                                {% endif %}
+                                                                <td>
+                                                                 {{o.product_status}}
+                                                            </td>
+                                                                <td>{{o.price}}</td>
+                                                                
+                                                                <td><a href="{% url 'admindash:admin-order-detail'  o.id%}" class="btn-small d-block">View</a></td>
+                                                                {% if o.product_status == 'cancelled'  %}
+                                                                <td><a href=""class="btn-small" disabled >Cancelled</a></td>
+                                                                {% else  %}
+                                                                <td><a href="{% url 'admindash:admin-cancel-order' o.id  %}" class="btn-small">Cancel</a></td>
+                                                                {% endif  %}
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                        
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+{% endblock %}
+   

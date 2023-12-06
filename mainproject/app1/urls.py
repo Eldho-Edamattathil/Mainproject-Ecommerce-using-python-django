@@ -38,5 +38,24 @@ urlpatterns = [
   
   #checkout
   
-  path('checkout/',views.checkout_view,name= 'checkout')
+  path('checkout/',views.checkout_view,name= 'checkout'),
+  
+  # dashboard
+  
+  path('dashboard/',views.customer_dashboard,name= 'dashboard'),
+  
+  path('dashboard/order/<int:id>',views.order_detail,name= 'order-detail'),
+  
+  # make default address
+  
+  
+  path('make-default-address/', views.make_address_default,name= 'make-default-address'),
+  
+  # place order
+  
+  path('checkout/place-order/', views.place_order,name= 'place-order'),
+  
+  
+  
+  
 ]

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .forms import CreateUserForm
+from .forms import CreateUserForm,Profileform
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from app1.backends import EmailBackend  # Import your custom authentication backend
@@ -10,6 +10,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.cache import cache_control
 from django.http import HttpResponseRedirect,HttpResponseBadRequest
 from django.urls import reverse
+from app1.models import UserDetails
 
 
 from userauths.models import User  # Import your custom user model
@@ -242,3 +243,26 @@ def logoutUser(request):
 
 
 
+
+
+def profile_update(request):
+    profile =UserDetails.objects.get(user=request.user)
+    if request.method == 'POST':
+        
+        form =Profileform(request.POST, request.FILES,instance=profile)
+        if form.is_valid():
+            new_form= form.save(commit=False)
+            new_form.user= request.user
+            new_form.save()
+            messages.success(request,'Profile updated Successfully')
+            return redirect('app1:dashboard')
+        
+    else:
+        form=Profileform(instance=profile)
+    
+         
+    context={
+        'form':form,
+        'profile':profile
+        }
+    return render(request,'userauths/profile-edit.html',context)

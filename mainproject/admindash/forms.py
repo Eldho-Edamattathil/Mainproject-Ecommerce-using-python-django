@@ -1,5 +1,5 @@
 from django import forms
-from app1.models import Product
+from app1.models import Product,CartOrder
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 
@@ -49,3 +49,6 @@ class ProductImagesForm(forms.ModelForm):
     class Meta:
         model = ProductImages
         fields = ['Images']
+        
+        
+        

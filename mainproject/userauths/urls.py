@@ -12,6 +12,7 @@ urlpatterns = [
   path('sign-up/otp_verification',views.otp_verification,name="otp_verification"),
   path('login_otp/',views.login_otp,name ='login_otp'),
   path('login/otp_verification_login',views.otp_verification_login,name="otp_verification_login"),
+  path('profile/update/',views.profile_update,name="profile-update"),
   
 
 ]

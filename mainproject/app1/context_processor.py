@@ -1,12 +1,15 @@
 from app1.models import Product,ProductImages,Category
 from django.shortcuts import render,redirect
+from django.db.models import Min, Max
 
 
 def default(request):
   categories = Category.objects.filter(is_blocked =False)
+  min_max_price = Product.objects.aggregate(Min("price"),Max('price'))
   
   return {
-    "categories":categories
+    "categories":categories,
+    "min_max_price":min_max_price
   }
   
   

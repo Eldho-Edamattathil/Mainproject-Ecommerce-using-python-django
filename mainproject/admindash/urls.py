@@ -16,7 +16,18 @@ urlpatterns = [
     path('admin_category_edit/<str:cid>/',views.admin_category_edit,name='admin_category_edit'),
     
     path('admin_delete_category/<str:cid>/',views.delete_category,name='admin_delete_category'),
-    path('block_unblock_category/<str:cid>/',views.available_category,name='block_unblock_category')
+    path('block_unblock_category/<str:cid>/',views.available_category,name='block_unblock_category'),
+    
+    
+     path('order-list/',views.order_list,name='order-list'),
+     
+     path('admin-order-detail/<int:id>',views.admin_order_detail,name='admin-order-detail'),
+     
+     path('admin-cancel-order/<int:id>',views.admin_cancel_order,name='admin-cancel-order')
+     
+     
+    
+    
     
     
     

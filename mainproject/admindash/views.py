@@ -7,6 +7,7 @@ from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import inlineformset_factory
 from django.contrib import messages
 from django.core.paginator import Paginator
+from app1.models import CartOrder,CartOrderItems
 
 
 @login_required(login_url='adminside:admin_login')  # Use the named URL pattern
@@ -528,13 +529,96 @@ def available_category(request,cid):
 
 
 
+
+
+# order management
+
+def order_list(request):
+    order=CartOrder.objects.all().order_by("-id")
     
+
+    context = {
+        'order': order,
+       
+    }
+    
+        
+    
+    
+    return render(request, 'adminside/order-list.html',{
+        'order':order
+    })
+    
+    
+    
+def admin_order_detail(request,id):
+    order = get_object_or_404(CartOrder, id=id)
+    print(order)
+
+    # Use filter based on the specific order instance
+    products = CartOrderItems.objects.filter(order=order)
+
+    context = {
+        'products': products,
+        'order': order,
+    }
+    
+    return render(request,'adminside/admin-order-detail.html',context)
+
+
+
+
+
+    
+    
+# admin cancel order
+
+# def admin_cancel_order(request,id):
+#     order = get_object_or_404(CartOrder, id=id)
+#     print(order)
+#     order.product_status='cancelled'
+#     order.save()
+#     products = CartOrderItems.objects.filter(order=order)
+#     for p in products:
+#         print(p.item)
+#         productss=Product.objects.filter(title=p.item)
+#         for s in productss:
+#             print(s.stock_count)
+#             s.stock_count = int(s.stock_count)+p.qty
+#             s.save()
+            
+            
+            
+    
+    
+    
+#     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
     
     
 
     
         
-        
+def admin_cancel_order(request, id):
+    order = get_object_or_404(CartOrder, id=id)
+
+    if order.product_status == 'cancelled':
+        messages.warning(request, f"Order {order.id} is already cancelled.")
+    else:
+        # Update order status to 'cancelled'
+        order.product_status = 'cancelled'
+        order.save()
+
+        # Update product stock count
+        products = CartOrderItems.objects.filter(order=order)
+        for p in products:
+            productss = Product.objects.filter(title=p.item)
+            for s in productss:
+                s.stock_count = int(s.stock_count) + p.qty
+                s.save()
+
+        messages.success(request, f"Order {order.id} has been cancelled successfully.")
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))       
         
     
         

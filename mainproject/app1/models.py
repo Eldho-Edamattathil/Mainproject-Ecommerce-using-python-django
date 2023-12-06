@@ -1,14 +1,17 @@
 from django.db import models
 from shortuuidfield import ShortUUIDField
+from django.conf import settings
+from django.shortcuts import reverse
 
 
 from django.utils.html import mark_safe
 from userauths.models import User
 
 STATUS_CHOICE = (
-  ("process", "Processing"),
+  ("processing", "Processing"),
   ("shipped", "Shipped"),
-  ("delivered", "Delivered")
+  ("delivered", "Delivered"),
+  ("cancelled","cancelled"),
 ) 
 
 RATING = (
@@ -152,3 +155,100 @@ class Variants(models.Model):
   
 
 ####################cart, Order, OrderItems, address################ 
+
+
+
+# cart
+class Cart(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    products = models.ManyToManyField(Product, through='CartItem')
+    created_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
+
+    def get_absolute_url(self):
+        return reverse('cart_detail')  # Change 'cart_detail' to the URL name of your cart detail view
+
+    def __str__(self):
+        return f"Cart for {self.user.email}"
+
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.title} in {self.cart.user.email}"
+      
+    def save(self, *args, **kwargs):
+        self.total_price = float(self.product.price) * self.quantity
+        super().save(*args, **kwargs)
+        
+        
+        
+class CartOrder(models.Model):
+  user =models.ForeignKey(User, on_delete=models.CASCADE)
+  price = models.DecimalField(max_digits=10,decimal_places=1,default = 1.99)
+  paid_status=models.BooleanField(default=False)
+  order_date=models.DateTimeField(auto_now_add=True)
+  product_status=models.CharField(choices=STATUS_CHOICE,max_length=30,default="processing")
+  
+  
+  class Meta:
+    verbose_name_plural= "Cart order"
+    
+  def __str__(self):
+        return f"Cart for {self.user.email}"
+    
+    
+class CartOrderItems(models.Model):
+  order = models.ForeignKey(CartOrder, on_delete=models.CASCADE)
+  invoice_no=models.CharField(max_length=200)
+  product_status=models.CharField(max_length=200)
+  item = models.CharField(max_length=200)
+  image =models.CharField(max_length=200)
+  qty=models.IntegerField(default=0)
+  price =models.DecimalField(max_digits=10,decimal_places=2,default=1.99)
+  total =models.DecimalField(max_digits=10,decimal_places=2,default=1.99)
+  
+  
+  
+  class meta:
+    verbose_name_plural ="Cart Order Items"
+    
+    
+  def order_img(self):
+    return mark_safe('<img src= "/media/%s" width="50" height= "50" />' % (self.image))
+  
+  
+  
+  
+# Adresss
+
+class Address(models.Model):
+  user = models.ForeignKey(User,on_delete=models.SET_NULL, null =True)
+  address = models.CharField(max_length=100,null=True)
+  mobile = models.CharField(max_length=15,null=True)
+  status = models.BooleanField(default=False)
+  
+  
+  class meta:
+    verbose_name_plural ="Address"
+    
+    
+    
+class UserDetails(models.Model):
+  user=models.OneToOneField(User, on_delete=models.CASCADE)
+  image=models.ImageField(upload_to='userimage')
+  full_name=models.CharField(max_length=200, null=True,blank=True)
+  bio = models.CharField(max_length=200, null=True, blank=True)
+  phone =models.CharField(max_length=15, null=True,blank=True)
+  verified =models.BooleanField(default=False)
+  
+  def __str__(self):
+      return self.full_name
+  
+  
+    
+    
+    

@@ -16,7 +16,12 @@
     <!-- Template CSS -->
     <link href="{% static 'admin/assets/css/main.css' %}" rel="stylesheet" type="text/css" />
 
-   
+    <style>
+        .wide-table {
+            width: 100%; /* Set the width as needed */
+            /* Add any additional styling you want */
+        }
+    </style>
 
     
 </head>
@@ -31,6 +36,7 @@
             <div>
                 <button class="btn btn-icon btn-aside-minimize"> <i class="text-muted material-icons md-menu_open"></i> </button>
             </div>
+            
         </div>
         <nav>
             <ul class="menu-aside">
@@ -57,7 +63,7 @@
                         <span class="text">Orders</span>
                     </a>
                     <div class="submenu">
-                        <a href="#">Order list 1</a>
+                        <a href="{% url 'admindash:order-list'  %}">Order list 1</a>
                         <a href="#">Order detail</a>
                     </div>
                 </li>

@@ -1,6 +1,6 @@
 from django.db.models import Count
 from django.shortcuts import render,redirect
-from app1.models import Product,ProductImages,Category,Variants,Size
+from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
@@ -9,6 +9,8 @@ from django.core.paginator import Paginator
 from decimal import Decimal
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 
 
 
@@ -151,7 +153,13 @@ def filter_product(request):
             categories = request.GET.getlist('category[]')
             print("Selected Categories:", categories)
 
+            min_price= request.GET['min_price']
+            max_price= request.GET['max_price']
+            
             products = Product.objects.filter(status=True).order_by('-id').distinct()
+            
+            products=products.filter(price__gte=min_price)
+            products=products.filter(price__lte=max_price)
             print("All Products:", products)
             print("Selected Categories:", categories)
 
@@ -228,12 +236,16 @@ def filter_product(request):
     
         
     
+# db add to cart
 
 
+# working cart
 
 def add_to_cart(request):
+    product_id = str(request.GET['id'])
+    
     cart_product = {
-        str(request.GET['id']): {
+        product_id: {
             'title': request.GET['title'],
             'qty': request.GET['qty'],
             'price': request.GET['price'],
@@ -243,32 +255,121 @@ def add_to_cart(request):
     }
 
     if 'cart_data_obj' in request.session:
-        if str(request.GET['id']) in request.session['cart_data_obj']:
-            cart_data = request.session['cart_data_obj']
-            cart_data[str(request.GET['id'])]['qty'] = int(cart_product[str(request.GET['id'])]['qty'])
-            cart_data.update(cart_product)
-            request.session['cart_data_obj'] = cart_data
+        cart_data = request.session['cart_data_obj']
+
+        if product_id in cart_data:
+            # Product already exists in the cart
+            return JsonResponse({
+                "message": "Product already in the cart",
+                'totalcartitems': len(cart_data),
+                'already_in_cart': True
+            })
         else:
-            cart_data = request.session['cart_data_obj']
+            # Product is not in the cart, add it
             cart_data.update(cart_product)
             request.session['cart_data_obj'] = cart_data
     else:
         request.session['cart_data_obj'] = cart_product
 
-    return JsonResponse({"data": request.session['cart_data_obj'], 'totalcartitems': len(request.session['cart_data_obj'])})
+    return JsonResponse({
+        "message": "Product added to the cart",
+        'totalcartitems': len(request.session['cart_data_obj']),
+        'already_in_cart': False
+    })
+
+# db add tot cart latest
+
+# so far the latest
+# def add_to_cart(request):
+#     product_id = request.GET.get('id')
+#     quantity = int(request.GET.get('qty', 1))
+
+#     product = get_object_or_404(Product, id=product_id)
+
+#     # Check if the user has an active cart in the session
+#     if 'cart_data_obj' not in request.session:
+#         request.session['cart_data_obj'] = {}
+
+#     cart_data = request.session['cart_data_obj']
+
+#     # Check if the product is already in the cart
+#     if product_id in cart_data:
+#         cart_data[product_id]['qty'] += quantity
+#     else:
+#         # Add the product to the cart
+#         cart_data[product_id] = {
+#             'title': product.title,
+#             'qty': quantity,
+#             'price': str(product.price),
+#             'pid': str(product.pid),
+#             'image': str(product.image),
+#         }
+
+#     # Update the session with the modified cart data
+#     request.session['cart_data_obj'] = cart_data
+
+#     # Save the product to the database (you can customize this part based on your models)
+#     if request.user.is_authenticated:
+#         user_cart, created = Cart.objects.get_or_create(user=request.user)
+#         product_instance, _ = CartItem.objects.get_or_create(cart=user_cart, product=product)
+#         product_instance.quantity += quantity
+#         product_instance.total_price = float(product.price) * product_instance.quantity
+#         product_instance.save()
+
+#     total_cart_items = len(request.session['cart_data_obj'])
+#     response_data = {
+#         "data": request.session['cart_data_obj'],
+#         "totalcartitems": total_cart_items,
+#         "already_in_cart": False,
+#     }
+
+#     return JsonResponse(response_data)
+
+
+
+# def add_to_cart(request):
+    
+    
+    
+    
+#     cart_product = {
+#         str(request.GET['id']): {
+#             'title': request.GET['title'],
+#             'qty': request.GET['qty'],
+#             'price': request.GET['price'],
+#             'pid': request.GET['pid'],
+#             'image': request.GET['image'],
+#         }
+#     }
+
+#     if 'cart_data_obj' in request.session:
+#         if str(request.GET['id']) in request.session['cart_data_obj']:
+#             cart_data = request.session['cart_data_obj']
+#             cart_data[str(request.GET['id'])]['qty'] = int(cart_product[str(request.GET['id'])]['qty'])
+#             cart_data.update(cart_product)
+#             request.session['cart_data_obj'] = cart_data
+#         else:
+#             cart_data = request.session['cart_data_obj']
+#             cart_data.update(cart_product)
+#             request.session['cart_data_obj'] = cart_data
+#     else:
+#         request.session['cart_data_obj'] = cart_product
+        
+    
+
+#     return JsonResponse({"data": request.session['cart_data_obj'], 'totalcartitems': len(request.session['cart_data_obj'])})
 
 
 
 
-# def cart_view(request):
-    cart_total_amount =0
-    if 'cart_data_obj' in request.session:
-        for p_id,item in request.session['cart_data_obj'].items():
-            cart_total_amount+= int(item['qty']) * float(item['price'])
-        return render(request,'app1/cart.html',{"cart_data": request.session['cart_data_obj'], 'totalcartitems': len(request.session['cart_data_obj']),'cart_total_amount':cart_total_amount}) 
-    else:
-        messages.warning(request,"Your cart is empty")
-        return redirect('app1:index')
+
+
+
+
+
+
+
+# existing cart view
 
 def cart_view(request):
     cart_total_amount = 0
@@ -299,42 +400,76 @@ def cart_view(request):
         messages.warning(request, "Your cart is empty")
         return redirect('app1:index')
     
-    
-    
-# def delete_item_from_cart(request):
-#     product_id = str(request.GET['id'])
-#     if 'cart_data_obj' in request.session:
-#         if product_id in request.session['cart_data_obj']:
-#             cart_data = request.session['cart_data_obj']
-#             del request.session['cart_data_obj'][product_id]
-#             request.session['cart_data_obj']=cart_data
-            
+# # def cart_view(request):
+#     user = request.user
 #     cart_total_amount = 0
 
-#     if 'cart_data_obj' in request.session:
-#         cart_data = request.session.get('cart_data_obj', {})
+#     try:
+#         cart = user.cart
+#     except Cart.DoesNotExist:
+#         cart = None
 
-#         for p_id, item in cart_data.items():
-#             try:
-#                 # Split the price string into individual prices and convert to float
-#                 prices = [float(price) for price in item.get('price', '').split()]
-#                 print(prices)
-#                 # Sum up the individual prices
-#                 total_price = sum(prices)
-#                 print(total_price)
-#                 qty = int(item.get('qty', 0))
-#                 cart_total_amount += qty * total_price
-#             except (ValueError, TypeError):
-#                 # Handle conversion errors if qty or total_price is not a valid number
-#                 pass
+#     if cart:
+#         cart_items = CartItem.objects.filter(cart=cart)
+
+#         for cart_item in cart_items:
+#             print(f"Product Price: {cart_item.product.price}, Quantity: {cart_item.quantity}")
+#             total_price = float(cart_item.product.price) * cart_item.quantity
+#             cart_total_amount += total_price
             
-#     context=render_to_string("app1/async/cart-list.html",{
+
+#         return render(request, 'app1/cart.html', {
+#             'cart_items': cart_items,
+#             'totalcartitems': cart_items.count(),
+#             'cart_total_amount': cart_total_amount
+#         })
+#     else:
+#         messages.warning(request, "Your cart is empty")
+#         return redirect('app1:index')   
+    
+
+
+# db cart view
+# def cart_view(request):
+#     cart_total_amount = 0
+
+#     if request.user.is_authenticated:
+#         # Retrieve products from the database for authenticated users
+#         user_cart, created = Cart.objects.get_or_create(user=request.user)
+#         cart_items = CartItem.objects.filter(cart=user_cart)
+
+#         # Save the products to the session
+#         cart_data = {}
+#         for cart_item in cart_items:
+#             product_id = str(cart_item.product.id)
+#             cart_data[product_id] = {
+#                 'title': cart_item.product.title,
+#                 'qty': cart_item.quantity,
+#                 'price': str(cart_item.product.price),
+#                 'pid': str(cart_item.product.pid),
+#                 'image': str(cart_item.product.image),
+#             }
+
+#             try:
+#                 # Calculate total price for the cart view
+#                 total_price = float(cart_item.product.price) * cart_item.quantity
+#                 cart_total_amount += total_price
+#             except (ValueError, TypeError):
+#                 # Handle conversion errors if quantity or total_price is not a valid number
+#                 pass
+
+#         # Save the updated cart data to the session
+#         request.session['cart_data_obj'] = cart_data
+
+#         return render(request, 'app1/cart.html', {
 #             'cart_data': cart_data,
 #             'totalcartitems': len(cart_data),
 #             'cart_total_amount': cart_total_amount
 #         })
-#     return JsonResponse({"data":context,'totalcartitems': len(cart_data)})
-
+#     else:
+#         # Handle the case for anonymous users
+#         messages.warning(request, "Your cart is empty")
+#         return redirect('app1:index')
 
 
 def delete_item_from_cart(request):
@@ -413,12 +548,71 @@ def update_from_cart(request):
 
 
 
+# def checkout_view(request):
+#     cart_total_amount=0
+#     total_amount =0
+    
+#     if 'cart_data_obj' in request.session:
+#         for p_id, item in cart_data.items():
+#             try:
+#                 # Split the price string into individual prices and convert to float
+#                 prices = [float(price) for price in item.get('price', '').split()]
+#                 # Sum up the individual prices
+#                 total_price = sum(prices)
+#                 qty = int(item.get('qty', 0))
+#                 total_amount += qty * total_price
+#             except (ValueError, TypeError):
+#                 # Handle conversion errors if qty or total_price is not a valid number
+#                 pass
+#             order =CartOrder.objects.create(
+#                 user=request.user,
+#                 price=total_amount
+#             )
+        
+        
+#         for p_id, item in cart_data.items():
+#             try:
+#                 # Split the price string into individual prices and convert to float
+#                 prices = [float(price) for price in item.get('price', '').split()]
+#                 # Sum up the individual prices
+#                 total_price = sum(prices)
+#                 qty = int(item.get('qty', 0))
+#                 cart_total_amount += qty * total_price
+#             except (ValueError, TypeError):
+#                 # Handle conversion errors if qty or total_price is not a valid number
+#                 pass
+            
+            
+#             cart_order_products =CartOrderItems.objects.create(
+#                 order =order,
+#                 invoice_no ="INVOICE_NO-" + str(order.id),
+#                 item = item['title'],
+#                 image=item['image'],
+#                 qty=item['qty'],
+#                 price=item['price'],
+#                 total = cart_total_amount      
+#                 # might need to change
+#             )
+    
+    
+   
+   
+
+
 def checkout_view(request):
     cart_total_amount = 0
+    total_amount = 0
+
+    if not request.user.is_authenticated:
+        # Handle anonymous user (redirect to login, show a message, etc.)
+        messages.warning(request, "Please log in to complete the checkout.")
+        return redirect('userauths:login')  # Adjust the redirect URL as needed
 
     if 'cart_data_obj' in request.session:
         cart_data = request.session['cart_data_obj']
+        print(cart_data)
 
+        # Calculate total_amount for the entire order
         for p_id, item in cart_data.items():
             try:
                 # Split the price string into individual prices and convert to float
@@ -426,13 +620,222 @@ def checkout_view(request):
                 # Sum up the individual prices
                 total_price = sum(prices)
                 qty = int(item.get('qty', 0))
-                cart_total_amount += qty * total_price
+                total_amount += qty * total_price
             except (ValueError, TypeError):
                 # Handle conversion errors if qty or total_price is not a valid number
                 pass
+
+        # if request.user.is_authenticated:
+        #     # Create CartOrder for the entire order only if the user is authenticated
+        #     order = CartOrder.objects.create(
+        #         user=request.user,
+        #         price=total_amount
+        #     )
+
+            # Create CartOrderItems for each product in the cart
+            for p_id, item in cart_data.items():
+                try:
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    cart_total_amount += qty * total_price
+
+                    # Create CartOrderItems for each product
+                    # CartOrderItems.objects.create(
+                    #     order=order,
+                    #     invoice_no="INVOICE_NO-" + str(order.id),
+                    #     item=item['title'],
+                    #     image=item['image'],
+                    #     qty=qty,
+                    #     price=item['price'],
+                    #     total=qty * total_price
+                    # )
+                except (ValueError, TypeError):
+                    pass
+            
+        # Clear the cart data from the session after processing the order
+        try:
+            active_address= Address.objects.get(user=request.user, status =True)
+        except:
+            messages.warning(request,"There are multiple. Only one should be activated")
+            active_address=None
+        # del request.session['cart_data_obj']
+
+        return render(request, 'app1/checkout.html', {
+            'cart_data': cart_data,
+            'totalcartitems': len(cart_data),
+            'cart_total_amount': cart_total_amount,
+            'active_address':active_address
+        })
+    return HttpResponse("No items in the cart. Please add items before checking out.")
     
-        return render (request,'app1/checkout.html',{
-        'cart_data': cart_data,
-        'totalcartitems': len(cart_data),
-        'cart_total_amount': cart_total_amount
-    })
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+# Customer Dashboard
+
+def customer_dashboard(request):
+    if not request.user.is_authenticated:
+        # Handle anonymous user (redirect to login, show a message, etc.)
+        messages.warning(request, "Please log in to access Dashboard.")
+        return redirect('app1:index')
+    
+        
+    orders=CartOrder.objects.filter(user=request.user).order_by("-id")
+    print(orders)
+    
+    
+    
+    
+    address = Address.objects.filter(user=request.user)
+    user_profile, created = UserDetails.objects.get_or_create(user=request.user)
+
+    if created:
+        messages.success(request, 'UserDetails created successfully.')
+    
+    if request.method == 'POST':
+        address =request.POST['address']
+        mobile = request.POST['phone']
+        
+        new_address =Address.objects.create (
+            user =request.user,
+            address =address,
+            mobile =mobile
+        )
+        messages.success(request,'Address Added Successfully')
+        return redirect("app1:dashboard")
+    else:
+        print("Error")
+        
+    
+    
+    context ={
+        'user_profile':user_profile,
+        'orders':orders,
+        'address':address
+    }
+    
+    return render(request,'app1/dashboard.html',context)
+
+    
+
+
+def order_detail(request, id):
+    # Use get_object_or_404 to ensure that the order exists or return a 404 response
+    order = get_object_or_404(CartOrder, user=request.user, id=id)
+    print(order)
+
+    # Use filter based on the specific order instance
+    products = CartOrderItems.objects.filter(order=order)
+
+    context = {
+        'products': products,
+    }
+
+    return render(request, 'app1/order-detail.html', context)
+
+
+
+def make_address_default(request):
+    id =request.GET['id']
+    Address.objects.update(status=False)
+    Address.objects.filter(id =id).update(status=True)
+    return JsonResponse({'boolean':True})
+
+
+
+
+
+def place_order(request):
+    cart_total_amount = 0
+    total_amount = 0
+    
+    
+    if 'cart_data_obj' in request.session:
+        cart_data = request.session['cart_data_obj']
+        for p_id, item in cart_data.items():
+            print(item)
+            products=Product.objects.filter(title=item['title'])
+            for p in products:
+                p.stock_count=int(p.stock_count) - int(item['qty'])
+                p.save() 
+                
+                
+                
+                
+    # store data in database
+    if 'cart_data_obj' in request.session:
+        cart_data = request.session['cart_data_obj']
+        print(cart_data)
+
+        # Calculate total_amount for the entire order
+        for p_id, item in cart_data.items():
+            try:
+                # Split the price string into individual prices and convert to float
+                prices = [float(price) for price in item.get('price', '').split()]
+                # Sum up the individual prices
+                total_price = sum(prices)
+                qty = int(item.get('qty', 0))
+                total_amount += qty * total_price
+            except (ValueError, TypeError):
+                # Handle conversion errors if qty or total_price is not a valid number
+                pass
+
+        if request.user.is_authenticated:
+            # Create CartOrder for the entire order only if the user is authenticated
+            order = CartOrder.objects.create(
+                user=request.user,
+                price=total_amount
+            )
+
+            # Create CartOrderItems for each product in the cart
+            for p_id, item in cart_data.items():
+                try:
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    cart_total_amount += qty * total_price
+
+                    # Create CartOrderItems for each product
+                    CartOrderItems.objects.create(
+                        order=order,
+                        invoice_no="INVOICE_NO-" + str(order.id),
+                        item=item['title'],
+                        image=item['image'],
+                        qty=qty,
+                        price=item['price'],
+                        total=qty * total_price
+                    )
+                except (ValueError, TypeError):
+                    pass
+    
+    
+    #till here
+    del request.session['cart_data_obj']
+             
+    
+
+    return render(request, 'app1/place-order.html')
+
+
+
+
+
