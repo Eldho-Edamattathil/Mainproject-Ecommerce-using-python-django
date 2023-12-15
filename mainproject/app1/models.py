@@ -251,4 +251,26 @@ class UserDetails(models.Model):
   
     
     
-    
+class Coupon(models.Model):
+  code=models.CharField(max_length=50,unique=True)
+  discount=models.PositiveIntegerField(help_text='discount in percentage')
+  active=models.BooleanField(default=True)
+  active_date=models.DateField()
+  expiry_date=models.DateField()
+  created_date=models.DateTimeField(auto_now_add=True)
+  
+  
+  def __str__(self):
+     return self.code
+   
+   
+   
+class wishlist_model(models.Model):
+  user=models.ForeignKey(User,on_delete=models.CASCADE)
+  product=models.ForeignKey(Product,on_delete=models.CASCADE)
+  Date=models.DateTimeField(auto_now_add=True)
+  
+  
+  
+  class Meta:
+    verbose_name_plural="Wishlists"

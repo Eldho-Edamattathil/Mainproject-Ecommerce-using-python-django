@@ -114,16 +114,17 @@
                               <div class="total-amount">
                                   <div class="left">
                                       <div class="coupon">
-                                          <form action="#" target="_blank">
-                                              <div class="form-row row justify-content-center">
-                                                  <div class="form-group col-lg-6">
-                                                      <input class="font-medium" name="Coupon" placeholder="Enter Your Coupon">
-                                                  </div>
-                                                  <div class="form-group col-lg-6">
-                                                      <button class="btn  btn-sm"><i class="fi-rs-label mr-10"></i>Apply</button>
-                                                  </div>
-                                              </div>
-                                          </form>
+                                        <form action="{% url 'app1:cart' %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="form-row row justify-content-center">
+                                                <div class="form-group col-lg-6">
+                                                    {{ coupon_form.code }}
+                                                </div>
+                                                <div class="form-group col-lg-6">
+                                                    <button type="submit" class="btn btn-sm"><i class="fi-rs-label mr-2"></i>Apply</button>
+                                                </div>
+                                            </div>
+                                        </form>
                                       </div>
                                   </div>
                               </div>

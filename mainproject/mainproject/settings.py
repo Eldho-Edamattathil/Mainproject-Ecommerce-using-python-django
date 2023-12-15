@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'paypal.standard.ipn',
 ]
 
 MIDDLEWARE = [
@@ -162,3 +163,7 @@ EMAIL_PORT=587
 
 
 SHORTUUID_FIELD_SUFFIX = '_short'
+
+
+PAYPAL_RECEIVER_EMAIL="eldhogeorg@gmail.com"
+PAYPAL_TEST=True

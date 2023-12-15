@@ -1,0 +1,73 @@
+
+    <main class="main">
+        <div class="page-header breadcrumb-wrap">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="index.html" rel="nofollow">Home</a>
+                    <span></span> Shop
+                    <span></span> Wishlist
+                </div>
+            </div>
+        </div>
+        <section class="mt-50 mb-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="table-responsive">
+                            <table class="table shopping-summery text-center">
+                                <thead>
+                                    <tr class="main-heading">
+                                        <th scope="col" colspan="2">Product</th>
+                                        <th scope="col">Price</th>
+                                        <th scope="col">Stock Status</th>
+                                        <th scope="col">Action</th>
+                                        <th scope="col">Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                  {% for s in w   %}
+                                    <tr>
+                                     
+                                        <td class="image product-thumbnail"><img src="{{s.product.image.url}}" alt="#"></td>
+                                        <td class="product-des product-name">
+                                            <h5 class="product-name"><a href="shop-product-right.html">{{s.product.title}}</a></h5>
+                                            <!-- <p class="font-xs">Maboriosam in a tonto nesciung eget<br> distingy magndapibus. -->
+                                            </p>
+                                        </td>
+                                        <td ><span class="current-product-price-{{s.product.id}}">{{s.product.price}} </span></td>
+                                        
+                                        <td class="text-center" data-title="Stock">
+                                          <span class="badge rounded-pill {% if s.product.stock_count != '0' %} alert-success {% else %} alert-danger {% endif %}">
+                                              {% if s.product.stock_count == '0' %} Out of Stock  {% else %}in stock  {% endif %} </span>
+                                      </td>
+                                        <td class="text-right" data-title="Cart">
+
+                                            <input type="hidden" value="1" id="product-quantity" class="product-quantity-{{s.product.id}}">
+                                            <input type="hidden" class="product-pid-{{s.product.id}}" value="{{s.product.pid}}">
+                                            <input type="hidden" class="product-image-{{s.product.id}}" value="{{s.product.image.url}}">
+                                            <input type="hidden" class="product-id-{{s.product.id}}" value="{{s.product.id}}">
+                                            <input type="hidden" class="product-title-{{s.product.id}}" value="{{s.product.title}}">
+                                            {% if s.product.stock_count == '0'  %}
+                                            <button disabled>Add to Cart </button>
+                                            {% else %}
+                                            <button aria-label="Add To Cart" style="border-radius: 10%;width:100px;"   class="action-btn hover-up add-to-cart-btn" data-index="{{s.product.id}}" id="add-to-cart-btn">Add to Cart</button>
+                                            {% endif %}
+                                        </td>
+                                        <td class="action" data-title="Remove">
+                                          <button style="border: none; background:none" data-wishlist-product="{{s.id}}" class="delete-wishlist-product"><i class="fi-rs-trash"></i></button>
+                                        </td>
+                                        
+                                    </tr>
+                                    {% empty  %}
+                                        <td><p>Nothing in wishlist yet</p></td>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+  

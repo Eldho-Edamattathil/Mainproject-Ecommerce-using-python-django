@@ -1,15 +1,26 @@
-from app1.models import Product,ProductImages,Category
+from app1.models import Product,ProductImages,Category,wishlist_model
 from django.shortcuts import render,redirect
 from django.db.models import Min, Max
+from django.contrib import messages
+
 
 
 def default(request):
   categories = Category.objects.filter(is_blocked =False)
   min_max_price = Product.objects.aggregate(Min("price"),Max('price'))
   
+  
+  try:
+    wishlist=wishlist_model.objects.filter(user=request.user)
+  except:
+    # messages.warning(request,"You need to login to access wishlist")
+    wishlist=0
+  
   return {
     "categories":categories,
-    "min_max_price":min_max_price
+    "min_max_price":min_max_price,
+    "wishlist":wishlist
+    
   }
   
   

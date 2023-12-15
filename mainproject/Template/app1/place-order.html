@@ -1,2 +1,14 @@
-order placed successfully
-<a href="{% url 'app1:index'  %}">Back to home</a>
+
+{% extends 'partial/base.html' %}
+{% load static %}
+{% block content %}
+<div class="card-md-6 text-center">
+    <div class="card-body">
+        <h1>Thanks for shopping with us</h1>
+        <h3>Order placed successfully</h3>
+        <br>
+        <a href="{% url 'app1:index' %}" class="btn btn-primary mt-3">Back to home</a>
+        <a href="{% url 'app1:dashboard' %}" class="btn btn-primary mt-3">View orders</a>
+    </div>
+</div>
+{% endblock %}

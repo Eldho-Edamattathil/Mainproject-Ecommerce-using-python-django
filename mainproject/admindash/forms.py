@@ -1,7 +1,8 @@
 from django import forms
-from app1.models import Product,CartOrder
+from app1.models import Product,CartOrder,Coupon
 from django.core.exceptions import ValidationError
 from decimal import Decimal
+
 
 
 from app1.models import ProductImages
@@ -49,6 +50,22 @@ class ProductImagesForm(forms.ModelForm):
     class Meta:
         model = ProductImages
         fields = ['Images']
+        
+        
+class CouponForm(forms.Form):
+    code = forms.CharField(max_length=50)
+    
+    
+# class CouponForm(forms.ModelForm):
+#     class Meta:
+#         model = Coupon
+#         fields = ['code', 'discount', 'active', 'active_date', 'expiry_date']
+#         widgets = {
+#             'active_date': forms.DateInput(attrs={'type': 'date'}),
+#             'expiry_date': forms.DateInput(attrs={'type': 'date'}),
+#             'discount': forms.NumberInput(attrs={'min': '0', 'max': '100'}),
+#             'active': forms.CheckboxInput(),
+#         }
         
         
         

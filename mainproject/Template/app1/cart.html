@@ -11,6 +11,16 @@
                 </div>
             </div>
         </div>
+        <div class="alert alert-danger">
+            {% if messages %}
+            {% for message in messages %}
+          {{message}}
+            {% endfor %}
+            {% endif  %}
+        </div>
+
+
+
         <section class="mt-50 mb-50">
             <div class="container">
                 <div class="row">
@@ -119,13 +129,14 @@
                                     <div class="total-amount">
                                         <div class="left">
                                             <div class="coupon">
-                                                <form action="#" target="_blank">
+                                                <form action="{% url 'app1:cart' %}" method="POST" id="coupon-form">
+                                                    {% csrf_token %}
                                                     <div class="form-row row justify-content-center">
                                                         <div class="form-group col-lg-6">
-                                                            <input class="font-medium" name="Coupon" placeholder="Enter Your Coupon">
+                                                            {{ coupon_form.code }}
                                                         </div>
                                                         <div class="form-group col-lg-6">
-                                                            <button class="btn  btn-sm"><i class="fi-rs-label mr-10"></i>Apply</button>
+                                                            <button type="submit" class="btn btn-sm"><i class="fi-rs-label mr-2"></i>Apply</button>
                                                         </div>
                                                     </div>
                                                 </form>
@@ -144,7 +155,9 @@
                                             <tbody>
                                                 <tr>
                                                     <td class="cart_total_label">Cart Subtotal</td>
+                                                    <div id="cart-total">
                                                     <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">{{cart_total_amount|floatformat:2}}</span></td>
+                                                </div>
                                                 </tr>
                                                 <tr>
                                                     <td class="cart_total_label">Shipping</td>

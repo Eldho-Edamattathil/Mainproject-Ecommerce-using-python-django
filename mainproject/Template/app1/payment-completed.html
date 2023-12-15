@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+  <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
+  <style>
+    body {
+      background: #EEE;
+      /* font-size:0.9em !important; */
+    }
+    
+    .invoice {
+      background: #fff;
+      width: 970px !important;
+      margin: 50px auto;
+    }
+    .invoice .invoice-header {
+      padding: 25px 25px 15px;
+    }
+    .invoice .invoice-header h1 {
+      margin: 0;
+    }
+    .invoice .invoice-header .media .media-body {
+      font-size: 0.9em;
+      margin: 0;
+    }
+    .invoice .invoice-body {
+      border-radius: 10px;
+      padding: 25px;
+      background: #FFF;
+    }
+    .invoice .invoice-footer {
+      padding: 15px;
+      font-size: 0.9em;
+      text-align: center;
+      color: #999;
+    }
+    
+    .logo {
+      max-height: 70px;
+      border-radius: 10px;
+    }
+    
+    .dl-horizontal {
+      margin: 0;
+    }
+    .dl-horizontal dt {
+      float: left;
+      width: 80px;
+      overflow: hidden;
+      clear: left;
+      text-align: right;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .dl-horizontal dd {
+      margin-left: 90px;
+    }
+    
+    .rowamount {
+      padding-top: 15px !important;
+    }
+    
+    .rowtotal {
+      font-size: 1.3em;
+    }
+    
+    .colfix {
+      width: 12%;
+    }
+    
+    .mono {
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container invoice">
+    <div class="invoice-header">
+      <div class="row">
+        <div class="col-xs-8">
+          <h1>Invoice <small>With Credit</small></h1>
+          <h4 class="text-muted">NO: 554775/R1 | Date: 01/01/2015</h4>
+        </div>
+        <div class="col-xs-4">
+          <div class="media">
+            <div class="media-left">
+              <img class="media-object logo" src="" />
+            </div>
+            <ul class="media-body list-unstyled">
+              <li><strong>Autoparts</strong></li>
+              <li>Automobile</li>
+              
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="invoice-body">
+      <div class="row">
+        <div class="col-xs-5">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Company Details</h3>
+            </div>
+            <div class="panel-body">
+              <dl class="dl-horizontal">
+                <dt>Name</dt>
+                <dd><strong>Autoparts</strong></dd>
+                <dt>Industry</dt>
+                <dd>Automobile</dd>
+                <p>Get your gear today!!!</p>
+                <!-- <dd>Field 3, Moon</dd>
+                <dt>Phone</dt>
+                <dd>123.4456.4567</dd>
+                <dt>Email</dt>
+                <dd>mainl@acme.com</dd>
+                <dt>Tax NO</dt>
+                <dd class="mono">123456789</dd>
+                <dt>Tax Office</dt>
+                <dd>A' Moon</dd> -->
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h3 class="panel-title">Services / Products</h3>
+        </div>
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
+              <th>Item / Details</th>
+              <th class="text-center colfix">Unit Cost</th>
+              <th class="text-center colfix">Quantity</th>
+              
+              <th class="text-center colfix">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {%  for product_id,item in cart_data.items %}
+
+            <tr>
+              <td>
+                <span>{{item.title}}</span>
+                
+  
+              </td>
+              <td class="text-right">
+                <span class="mono">${{item.price}}</span>
+                
+  
+                
+              </td>
+              <td class="text-right">
+               
+                
+  
+                <small class="text-muted">{{item.qty}}</small>
+              </td>
+              
+              
+              <td class="text-right">
+                <strong class="mono">{% widthratio item.price 1 item.qty %}</strong>
+                
+  
+                
+              </td>
+            </tr>
+  
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel panel-default">
+        <table class="table table-bordered table-condensed">
+          <thead>
+            <tr>
+              <td class="text-center col-xs-1">Sub Total</td>
+              <!-- <td class="text-center col-xs-1">Discount</td>
+              <td class="text-center col-xs-1">Total</td>
+              <td class="text-center col-xs-1">Tax</td> -->
+              <td class="text-center col-xs-1">Grand Total</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="text-center rowtotal mono">${{cart_total_amount}}</th>
+              <!-- <th class="text-center rowtotal mono">-$1,800.00</th>
+              <th class="text-center rowtotal mono">$16,440.00</th>
+              <th class="text-center rowtotal mono">$3,312.00</th> -->
+              <th class="text-center rowtotal mono">${{cart_total_amount}}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="row">
+        <div class="col-xs-7">
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <i>Comments / Notes</i>
+              <hr style="margin:3px 0 5px" />
+            </div>
+          </div>
+        </div>
+        <div class="col-xs-5">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title">Payment Method</h3>
+            </div>
+            <div class="panel-body">
+              <p>For your convenience, you may deposite the final ammount at one of our banks</p>
+              <ul class="list-unstyled">
+                <li>Alpha Bank - <span class="mono">MO123456789456123</span></li>
+                <li>Beta Bank - <span class="mono">MO123456789456123</span></li>
+                <li>Gamma Bank - <span class="mono">MO123456789456123</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+    </div>
+    <div class="invoice-footer">
+      Hey {{request.user.first_name}},Thanks for shopping with us....!!!
+  
+      <strong>~ACME~</strong>
+    </div>
+  </div>
+</body>
+</html>

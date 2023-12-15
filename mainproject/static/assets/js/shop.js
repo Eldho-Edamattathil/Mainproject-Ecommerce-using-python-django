@@ -219,19 +219,16 @@ $(document).ready(function (){
 
 
 
+// variants
 
 // $(document).ready(function () {
 //     $(document).on('change', '#size-selection', function () {
 //         var selectedSize = $(this).val();
-//         var productId = '{{ product.pid }}';
+//         var productId = '{{ Product.pid|safe }}';  // Use |safe to avoid HTML escaping
 
 //         $.ajax({
-//             url: '{% url "get_variant_details" product.pid %}',
+//             url: "{% url 'get_variant_details",
 //             type: 'GET',
-//             data: {
-//                 'product_id': productId,
-//                 'variant': selectedSize
-//             },
 //             dataType: 'json',
 //             success: function (data) {
 //                 // Update the UI with variant details
@@ -240,11 +237,12 @@ $(document).ready(function (){
 //                 // Update other UI elements as needed
 //             },
 //             error: function (error) {
-//                 console.log('Error:', error);
+//                 console.log('Error:', error.responseText); // Log the response text for more details
 //             }
 //         });
 //     });
 // });
+
 
 // document.addEventListener('DOMContentLoaded', function () {
 //     var sizeSelection = document.getElementById('size-selection');
@@ -520,3 +518,69 @@ $(document).on("click", ".make-default-address", function(){
 
     })
 });
+
+
+
+
+
+$(document).on("click",".add-to-wishlist",function(){
+    let product_id=$(this).attr("data-product-item")
+    let this_val=$(this)
+
+
+    console.log("Product ID is", product_id)
+
+    $.ajax({
+        url:"/add-to-wishlist",
+        data:{
+            'id':product_id
+        },
+        dataType: "json",
+        beforeSend:function(){
+            console.log("Adding to wishlist")
+
+        },
+        success: function(response){
+            this_val.html("✔")
+            if (response.bool == true){
+                console.log("Added to wishlist..")
+            }
+
+        }
+
+
+    })
+
+
+})
+
+
+
+// remove from wishlist
+
+$(document).on("click",".delete-wishlist-product",function(){
+    let this_val=$(this)
+    let wishlist_id= $(this).attr("data-wishlist-product")
+
+    
+
+    console.log("Wishlist id is:", wishlist_id)
+
+    $.ajax({
+        url:"/remove-from-wishlist",
+        data:{
+            "id": wishlist_id
+       },
+       dataType: "json",
+       beforeSend: function(){
+        console.log("Deleting product from wishlist...");
+       },
+       success: function(response){
+        $("#wishlist-list").html(response.data)
+        
+       },
+    })
+
+    
+
+})

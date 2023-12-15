@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path,include
 from app1 import views
 from app1.views import index
 
@@ -56,6 +56,30 @@ urlpatterns = [
   path('checkout/place-order/', views.place_order,name= 'place-order'),
   
   
+  # paypal path
   
+  path('paypal/', include('paypal.standard.ipn.urls')),
+  
+  # payment completed
+  
+   path('payment-completed/', views.payment_completed_view,name= 'payment-completed'),
+   
+   path('payment-failed/', views.payment_failed_view,name= 'payment-failed'),
+   
+   
+  #  add coupon
+  
+  # path('add-coupon/',views.add_coupon,name='add-coupon')
+  # add to wishlist
+  
+  path('wishlist/',views.wishlist_view, name="wishlist"),
+  
+  
+  path('add-to-wishlist/', views.add_to_wishlist, name="add-to-wishlist"),
+  
+  
+  # remove from wishlist
+  
+  path("remove-from-wishlist", views.remove_wishlist, name="remove-from-wishlist")
   
 ]

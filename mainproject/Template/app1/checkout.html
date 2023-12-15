@@ -121,7 +121,7 @@
                                         {% endfor %}
                                         <tr>
                                             <th>SubTotal</th>
-                                            <td class="product-subtotal" colspan="2">${{cart_total_amount|floatformat:2}}</td>
+                                            <td class="product-subtotal" colspan="2">${{cart_total_amount|floatformat:0}}</td>
                                         </tr>
                                         <tr>
                                             <th>Shipping</th>
@@ -129,7 +129,7 @@
                                         </tr>
                                         <tr>
                                             <th>Total</th>
-                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">${{cart_total_amount|floatformat:2}}</span></td>
+                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">${{cart_total_amount|floatformat:0}}</span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -163,7 +163,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <div>
+                                {{paypal_payment_button.render}}
+                            </div>
+
+
+
+                            <div>
                             <a href="{% url 'app1:place-order'  %}" class="btn btn-fill-out btn-block mt-30">Place Order</a>
+                        </div>
                         </div>
                     </div>
                 </div>

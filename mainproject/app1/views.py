@@ -1,6 +1,6 @@
 from django.db.models import Count
 from django.shortcuts import render,redirect
-from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails
+from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
@@ -11,6 +11,17 @@ from django.shortcuts import get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.urls import reverse
+from datetime import datetime
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from paypal.standard.forms import PayPalPaymentsForm
+from django.utils import timezone
+from admindash.forms import CouponForm
+from django.http import HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
+from django.core import serializers
+
 
 
 
@@ -204,33 +215,33 @@ def filter_product(request):
 
 
     
-# ajax for variants
-# def get_variant_details(request):
-    # if request.method == 'GET':
-    #     product_id = request.GET.get('product_id')
-    #     variant_value = request.GET.get('variant')
+# view for variants
+# def get_variant_details(request,product_id,variant_size):
+#     if request.method == 'GET':
+#         product_id = request.GET.get('product_id')
+#         variant_value = request.GET.get('variant')
 
-    #     try:
-    #         # Fetch variant-specific details from the database
-    #         product = get_object_or_404(Product, pk=product_id)
-    #         variant = Variants.objects.get(product=product, size=variant_value)  # Assuming size is the field in Variants model corresponding to the selected size
+#         try:
+#             # Fetch variant-specific details from the database
+#             product = get_object_or_404(Product, pk=product_id)
+#             variant = Variants.objects.get(product=product, size=variant_value)  # Assuming size is the field in Variants model corresponding to the selected size
 
-    #         # Customize the response data based on your model fields
-    #         variant_details = {
-    #             'price': str(variant.price),  # Convert to string if needed
-    #             'stock_count': variant.stock_count,
-    #             # Add other details as needed
-    #         }
+#             # Customize the response data based on your model fields
+#             variant_details = {
+#                 'price': str(variant.price),  # Convert to string if needed
+#                 'stock_count': variant.stock_count,
+#                 # Add other details as needed
+#             }
 
-    #         return JsonResponse(variant_details)
+#             return JsonResponse(variant_details)
 
-    #     except Product.DoesNotExist:
-    #         return JsonResponse({'error': 'Product not found'})
+#         except Product.DoesNotExist:
+#             return JsonResponse({'error': 'Product not found'})
 
-    #     except Variants.DoesNotExist:
-    #         return JsonResponse({'error': 'Variant not found'})
+#         except Variants.DoesNotExist:
+#             return JsonResponse({'error': 'Variant not found'})
 
-    # return JsonResponse({'error': 'Invalid request method'})
+#     return JsonResponse({'error': 'Invalid request method'})
     
     
     
@@ -371,17 +382,30 @@ def add_to_cart(request):
 
 # existing cart view
 
+# modified
+
 def cart_view(request):
     cart_total_amount = 0
-
+    print(request.session.items())
+    
+    
+       
+            
+        
+        
+    
+    
+    
     if 'cart_data_obj' in request.session:
-        cart_data = request.session.get('cart_data_obj', {})
+        cart_data = request.session.get('cart_data_obj',{})
+        print(cart_data)
 
         for p_id, item in cart_data.items():
             try:
                 # Split the price string into individual prices and convert to float
                 prices = [float(price) for price in item.get('price', '').split()]
                 print(prices)
+                
                 # Sum up the individual prices
                 total_price = sum(prices)
                 print(total_price)
@@ -390,15 +414,197 @@ def cart_view(request):
             except (ValueError, TypeError):
                 # Handle conversion errors if qty or total_price is not a valid number
                 pass
+    
+        
+            
+        # Coupon
+        if request.method == 'POST':
+            coupon_form = CouponForm(request.POST)  # Instantiate the coupon form with the POST data
+
+            if coupon_form.is_valid():
+                coupon_code = coupon_form.cleaned_data['code']
+                print(coupon_code)
+                
+                try:
+                    # Assuming you have a Coupon model
+                    coupon = Coupon.objects.get(code__iexact=coupon_code, active=True)
+                    
+                    # Check if the coupon is within its active and expiry dates
+                    current_date = timezone.now().date()
+                    if current_date < coupon.active_date or current_date > coupon.expiry_date:
+                        messages.warning(request, 'Invalid coupon code or expired')
+                    else:
+                        # Apply the coupon discount to the cart total
+                        cart_total_amount -= (cart_total_amount * coupon.discount) / 100
+                        request.session['applied_coupon'] = cart_total_amount
+                        messages.success(request, f'Coupon "{coupon.code}" applied successfully')
+
+                except Coupon.DoesNotExist:
+                    messages.warning(request, 'Invalid coupon code')
+        else:
+            coupon_form = CouponForm()
+            
+            
+
+        
+        
 
         return render(request, 'app1/cart.html', {
             'cart_data': cart_data,
             'totalcartitems': len(cart_data),
-            'cart_total_amount': cart_total_amount
+            'cart_total_amount': cart_total_amount,
+            'coupon_form': coupon_form,  # Pass the coupon form to the template
         })
-    else:
-        messages.warning(request, "Your cart is empty")
-        return redirect('app1:index')
+    
+    print("hello123")
+    messages.warning(request, "Your cart is empty")
+    return redirect('app1:index')
+     
+    
+       
+    
+    
+    
+
+    
+# def cart_view(request):
+#     cart_total_amount = 0
+
+#     if 'cart_data_obj' in request.session:
+#         cart_data = request.session.get('cart_data_obj', {})
+#         print(cart_data)
+
+#         for p_id, item in cart_data.items():
+#             try:
+#                 # Split the price string into individual prices and convert to float
+#                 prices = [float(price) for price in item.get('price', '').split()]
+#                 print(prices)
+                
+#                 # Sum up the individual prices
+#                 total_price = sum(prices)
+#                 print(total_price)
+#                 qty = int(item.get('qty', 0))
+#                 cart_total_amount += qty * total_price
+#             except (ValueError, TypeError):
+#                 # Handle conversion errors if qty or total_price is not a valid number
+#                 pass
+            
+#         # Coupon
+#         if request.method == 'POST':
+#             coupon_form = CouponForm(request.POST)  # Instantiate the coupon form with the POST data
+
+#             if coupon_form.is_valid():
+#                 coupon_code = coupon_form.cleaned_data['code']
+#                 print(coupon_code)
+#                 try:
+#                     # Assuming you have a Coupon model
+#                     coupon = Coupon.objects.get(code__iexact=coupon_code, active=True)
+                    
+#                     # Check if the coupon is within its active and expiry dates
+#                     current_date = timezone.now().date()
+#                     if current_date < coupon.active_date or current_date > coupon.expiry_date:
+#                         messages.warning(request, 'Invalid coupon code or expired')
+#                     else:
+#                         # Apply the coupon discount to the cart total
+#                         cart_total_amount -= (cart_total_amount * coupon.discount) / 100
+#                         request.session['applied_coupon'] = cart_total_amount
+#                         messages.success(request, f'Coupon "{coupon.code}" applied successfully')
+
+#                 except Coupon.DoesNotExist:
+#                     messages.warning(request, 'Invalid coupon code')
+        
+#         else:
+#             coupon_form = CouponForm()
+            
+#     else:
+#         messages.warning(request, "Your cart is empty")
+#         return redirect('app1:index')
+
+#     return render(request, 'app1/cart.html', {
+#         'cart_data': cart_data,
+#         'totalcartitems': len(cart_data),
+#         'cart_total_amount': cart_total_amount,
+#         'coupon_form': coupon_form,  # Pass the coupon form to the template
+#     })
+
+#     # messages.warning(request, "Your cart is empty")
+#     # return redirect('app1:index')
+
+
+
+
+# def cart_view(request):
+#     cart_total_amount = 0
+
+#     if 'cart_data_obj' in request.session:
+#         cart_data = request.session.get('cart_data_obj', {})
+#         print(cart_data)
+
+#         for p_id, item in cart_data.items():
+#             try:
+#                 # Split the price string into individual prices and convert to float
+#                 prices = [float(price) for price in item.get('price', '').split()]
+#                 print(prices)
+                
+#                 # Sum up the individual prices
+#                 total_price = sum(prices)
+#                 print(total_price)
+#                 qty = int(item.get('qty', 0))
+#                 cart_total_amount += qty * total_price
+#             except (ValueError, TypeError):
+#                 # Handle conversion errors if qty or total_price is not a valid number
+#                 pass
+            
+            
+             
+            
+#         # coupon
+#             if request.method == 'POST':
+#                 coupon_form = CouponForm(request.POST)  # Instantiate the coupon form with the POST data
+
+#                 if coupon_form.is_valid():
+#                     coupon_code = coupon_form.cleaned_data['code']
+#                     print(coupon_code)
+#                     try:
+#                         # Assuming you have a Coupon model
+#                         coupon = Coupon.objects.get(code__iexact=coupon_code, active=True)
+                        
+#                         # Check if the coupon is within its active and expiry dates
+#                         current_date = timezone.now().date()
+#                         if current_date < coupon.active_date or current_date > coupon.expiry_date:
+#                             messages.warning(request, 'Invalid coupon code or expired')
+#                         else:
+#                             # Apply the coupon discount to the cart total
+#                             cart_total_amount -= (cart_total_amount * coupon.discount) / 100
+#                             request.session['applied_coupon']=cart_total_amount
+#                             messages.success(request, f'Coupon "{coupon.code}" applied successfully')
+                            
+
+#                     except Coupon.DoesNotExist:
+#                         messages.warning(request, 'Invalid coupon code')
+                
+
+#             else:
+#                 coupon_form = CouponForm()
+                
+            
+
+#         return render(request, 'app1/cart.html', {
+#             'cart_data': cart_data,
+#             'totalcartitems': len(cart_data),
+#             'cart_total_amount': cart_total_amount,
+#             # 'coupon_form': coupon_form,  # Pass the coupon form to the template
+#         })
+    
+#     messages.warning(request, "Your cart is empty")
+#     return redirect('app1:index')
+#     #     return render(request, 'app1/cart.html', {
+#     #         'cart_data': cart_data,
+#     #         'totalcartitems': len(cart_data),
+#     #         'cart_total_amount': cart_total_amount
+#     #     })
+#     # else:
+   
     
 # # def cart_view(request):
 #     user = request.user
@@ -600,6 +806,9 @@ def update_from_cart(request):
 
 
 def checkout_view(request):
+    
+    
+    
     cart_total_amount = 0
     total_amount = 0
 
@@ -625,33 +834,47 @@ def checkout_view(request):
                 # Handle conversion errors if qty or total_price is not a valid number
                 pass
 
-        # if request.user.is_authenticated:
-        #     # Create CartOrder for the entire order only if the user is authenticated
-        #     order = CartOrder.objects.create(
-        #         user=request.user,
-        #         price=total_amount
-        #     )
+# coupon applied total amount
+
+        applied_coupon = request.session.get('applied_coupon', None)
+
+        if applied_coupon is not None:
+                # If a coupon is applied, use the stored cart_total_amount
+            cart_total_amount = applied_coupon
+        else:
+                # If no coupon is applied, calculate the cart_total_amount from the cart_data
+                if 'cart_data_obj' in request.session:
+                    cart_data = request.session['cart_data_obj']
+
+                    for p_id, item in cart_data.items():
+                        try:
+                            prices = [float(price) for price in item.get('price', '').split()]
+                            total_price = sum(prices)
+                            qty = int(item.get('qty', 0))
+                            cart_total_amount += qty * total_price
+                        except (ValueError, TypeError):
+                            pass
+
+
+
+
+
+
+
+
+# till here  
 
             # Create CartOrderItems for each product in the cart
-            for p_id, item in cart_data.items():
-                try:
-                    prices = [float(price) for price in item.get('price', '').split()]
-                    total_price = sum(prices)
-                    qty = int(item.get('qty', 0))
-                    cart_total_amount += qty * total_price
+            # for p_id, item in cart_data.items():
+            #     try:
+            #         prices = [float(price) for price in item.get('price', '').split()]
+            #         total_price = sum(prices)
+            #         qty = int(item.get('qty', 0))
+            #         cart_total_amount += qty * total_price
 
-                    # Create CartOrderItems for each product
-                    # CartOrderItems.objects.create(
-                    #     order=order,
-                    #     invoice_no="INVOICE_NO-" + str(order.id),
-                    #     item=item['title'],
-                    #     image=item['image'],
-                    #     qty=qty,
-                    #     price=item['price'],
-                    #     total=qty * total_price
-                    # )
-                except (ValueError, TypeError):
-                    pass
+                   
+            #     except (ValueError, TypeError):
+            #         pass
             
         # Clear the cart data from the session after processing the order
         try:
@@ -661,20 +884,46 @@ def checkout_view(request):
             active_address=None
         # del request.session['cart_data_obj']
 
-        return render(request, 'app1/checkout.html', {
+        
+        
+    host=request.get_host()
+    paypal_dict={
+        'business':settings.PAYPAL_RECEIVER_EMAIL,
+        'amount':cart_total_amount,
+        'item_name':'Order-Item-No-'+ str(CartOrder.id),
+        'invoice':'INVOICE_NO-'+ str(CartOrder.id),
+        'currency_code':"USD",
+        'notify_url':'http://{}{}'.format(host, reverse("app1:paypal-ipn")),
+        'return_url':'http://{}{}'.format(host, reverse("app1:payment-completed")),
+        'cancel_url':'http://{}{}'.format(host, reverse("app1:payment-failed")),
+        
+        
+    }
+    
+    paypal_payment_button=PayPalPaymentsForm(initial=paypal_dict)
+    return render(request, 'app1/checkout.html', {
             'cart_data': cart_data,
             'totalcartitems': len(cart_data),
             'cart_total_amount': cart_total_amount,
-            'active_address':active_address
+            'active_address':active_address,
+            'paypal_payment_button':paypal_payment_button
         })
     return HttpResponse("No items in the cart. Please add items before checking out.")
+
+
+
+
+
+
+
+
+    
+
     
     
     
     
-    
-    
-    
+
     
     
     
@@ -830,6 +1079,8 @@ def place_order(request):
     
     #till here
     del request.session['cart_data_obj']
+        
+    
              
     
 
@@ -837,5 +1088,117 @@ def place_order(request):
 
 
 
+
+# PAYPAL
+
+def payment_completed_view(request):
+    cart_total_amount = 0
+
+    if 'cart_data_obj' in request.session:
+        cart_data = request.session.get('cart_data_obj', {})
+
+        for p_id, item in cart_data.items():
+            try:
+                # Split the price string into individual prices and convert to float
+                prices = [float(price) for price in item.get('price', '').split()]
+                print(prices)
+                # Sum up the individual prices
+                total_price = sum(prices)
+                print(total_price)
+                qty = int(item.get('qty', 0))
+                cart_total_amount += qty * total_price
+            except (ValueError, TypeError):
+                # Handle conversion errors if qty or total_price is not a valid number
+                pass
+            
+    
+    return render(request, 'app1/payment-completed.html',{
+            'cart_data': cart_data,
+            'totalcartitems': len(cart_data),
+            'cart_total_amount': cart_total_amount,
+           
+        })
+
+
+def payment_failed_view(request):
+    return render(request, 'app1/payment-failed.html')
+
+
+
+
+# wishlist
+
+@login_required
+def wishlist_view(request):
+    
+    wishlist=wishlist_model.objects.all()
+    
+    
+    if not wishlist:
+        # If the wishlist is empty, redirect to the index view with a message
+        messages.warning(request," wishlist is empty")
+        return redirect("app1:index") 
+    
+    
+    context={
+        'w':wishlist
+    }
+    
+    
+    return render(request,'app1/wishlist.html',context)
+
+@login_required
+def add_to_wishlist(request):
+    product_id=request.GET['id']
+    product=Product.objects.get(id=product_id)
+    
+    context={
+        
+    }
+    
+    wishlist_count=wishlist_model.objects.filter(product=product,user=request.user).count()
+    print(wishlist_count)
+    
+    if wishlist_count > 0:
+        context={
+            "bool":True
+        }
+        
+    else:
+        new_wishlist=wishlist_model.objects.create(
+            product=product,
+            user=request.user
+        )
+        context={
+            "bool":True
+        }
+    return JsonResponse(context)
+
+
+
+# remove from wishlist
+
+def remove_wishlist(request):
+    pid =request.GET['id']
+    wishlist= wishlist_model.objects.filter(user=request.user)
+    
+    wishlist_d=wishlist_model.objects.get(id=pid)
+    
+    delete_product=wishlist_d.delete()
+    
+    context={
+        "bool":True,
+        "w":wishlist
+        
+    }
+    if not wishlist_d:
+        messages.warning(request,"Nothiing")
+    
+    
+    wishlist_json=serializers.serialize('json', wishlist)
+    data= render_to_string("app1/async/wishlist-list.html", context)
+    
+    
+    return JsonResponse({"data":data,"w":wishlist_json})
 
 

@@ -1,8 +1,8 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from app1.models import Product,Category,ProductImages
+from app1.models import Product,Category,ProductImages,Coupon
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control
-from admindash.forms import CreateProductForm,ProductImagesForm
+from admindash.forms import CreateProductForm,ProductImagesForm,CouponForm
 from django.http import HttpResponse,HttpResponseRedirect
 from django.forms import inlineformset_factory
 from django.contrib import messages
@@ -618,11 +618,95 @@ def admin_cancel_order(request, id):
 
         messages.success(request, f"Order {order.id} has been cancelled successfully.")
 
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))       
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))    
+
+
+
+def admin_coupon(request):
+    coupon=Coupon.objects.all()
+    
+    
+    context={
+        'coupon':coupon
+    }
+    return render(request,'adminside/admin-coupon.html',context)
+
+
+def create_coupon(request):
+    if request.method == 'POST':
+        code = request.POST['code']
+        discount = request.POST['discount']
+        active = request.POST.get('active') == 'on'
+        active_date = request.POST['active_date']
+        expiry_date = request.POST['expiry_date']
+
+        # Check if active_date is not greater than expiry_date
+        if active_date > expiry_date:
+            messages.error(request, 'Active date should not be greater than expiry date')
+            return render(request, 'adminside/create-coupon.html')
+
+        # Check if the coupon with the same code already exists
+        if Coupon.objects.filter(code=code).exists():
+            messages.error(request, f'Coupon with code {code} already exists')
+            return render(request, 'adminside/create-coupon.html')
+
+        coupon = Coupon(
+            code=code,
+            discount=discount,
+            active=active,
+            active_date=active_date,
+            expiry_date=expiry_date
+        )
+        coupon.save()
+        messages.success(request, 'Coupon created successfully')
+        return redirect('admindash:admin-coupon')
+
+    return render(request, 'adminside/create-coupon.html')
+
+
+
+def edit_coupon(request,id):
+    
+    coupon_code = get_object_or_404(Coupon, id=id)
+    print(f'Active Date: {coupon_code.active_date}')
+    if request.method == 'POST':
+        code = request.POST['code']
+        discount = request.POST['discount']
+        active = request.POST.get('active') == 'on'
+        active_date = request.POST['active_date']
+        expiry_date = request.POST['expiry_date']
         
+
+        # Check if active_date is not greater than expiry_date
+        if active_date > expiry_date:
+            messages.error(request, 'Active date should not be greater than expiry date')
+            return render(request, 'adminside/create-coupon.html')
+        
+        coupon_code.code=code
+        coupon_code.discount=discount
+        coupon_code.active_date=active_date
+        coupon_code.expiry_date=expiry_date
+        coupon_code.active=active
+        coupon_code.save()
+        messages.success(request, 'Coupon Updated successfully')
+        return redirect('admindash:admin-coupon')
     
         
     
+    return render (request, 'adminside/edit-coupon.html',{'coupon_code':coupon_code})
+        
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+def delete_coupon(request,id):
+    if not request.user.is_authenticated:
+        return HttpResponse("Unauthorized", status=401)
+    try:
+        coupon= get_object_or_404(Coupon, id=id)
+    except ValueError:
+        return redirect('admindash:admin-coupon')
+    coupon.delete()
+    messages.warning(request,"Coupon has been deleted successfully")
+
+    return redirect('admindash:admin-coupon')
     
 
 
