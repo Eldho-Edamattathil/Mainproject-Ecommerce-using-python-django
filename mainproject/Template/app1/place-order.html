@@ -7,6 +7,16 @@
         <h1>Thanks for shopping with us</h1>
         <h3>Order placed successfully</h3>
         <br>
+        {% for o in order %}
+        {% if o.paid_status %}
+        <p>Amount has beed debited from your wallet</p>
+        <p>Remaining wallet amount:500</p>
+        {% endif  %}
+        {%  endfor %}
+
+
+
+
         <a href="{% url 'app1:index' %}" class="btn btn-primary mt-3">Back to home</a>
         <a href="{% url 'app1:dashboard' %}" class="btn btn-primary mt-3">View orders</a>
     </div>

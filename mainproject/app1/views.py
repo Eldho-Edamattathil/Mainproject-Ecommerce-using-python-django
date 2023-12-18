@@ -1,6 +1,6 @@
 from django.db.models import Count
 from django.shortcuts import render,redirect
-from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model
+from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model,wallet
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
@@ -21,6 +21,7 @@ from admindash.forms import CouponForm
 from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
+from userauths.models import User
 
 
 
@@ -837,27 +838,37 @@ def checkout_view(request):
 # coupon applied total amount
 
         applied_coupon = request.session.get('applied_coupon', None)
+    # discount=total_amount-applied_coupon
+    # print(discount)
 
         if applied_coupon is not None:
                 # If a coupon is applied, use the stored cart_total_amount
             cart_total_amount = applied_coupon
+            del request.session['applied_coupon']
+            request.session['invoice_amt'] = cart_total_amount
+            discount=total_amount-cart_total_amount
+            request.session['discount']=discount
+
+            
         else:
                 # If no coupon is applied, calculate the cart_total_amount from the cart_data
-                if 'cart_data_obj' in request.session:
-                    cart_data = request.session['cart_data_obj']
+            cart_total_amount = 0    
+            # if 'cart_data_obj' in request.session:
+            #     cart_data = request.session['cart_data_obj']
 
-                    for p_id, item in cart_data.items():
-                        try:
-                            prices = [float(price) for price in item.get('price', '').split()]
-                            total_price = sum(prices)
-                            qty = int(item.get('qty', 0))
-                            cart_total_amount += qty * total_price
-                        except (ValueError, TypeError):
-                            pass
+            for p_id, item in cart_data.items():
+                try:
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    cart_total_amount += qty * total_price
+                except (ValueError, TypeError):
+                    pass
 
 
-
-
+            print(cart_total_amount)
+            request.session['cart_total_amount'] = cart_total_amount
+            discount=total_amount-cart_total_amount
 
 
 
@@ -901,12 +912,32 @@ def checkout_view(request):
     }
     
     paypal_payment_button=PayPalPaymentsForm(initial=paypal_dict)
+    
+    if paypal_payment_button in request.POST:
+        print("payment done")
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    print(cart_total_amount)
     return render(request, 'app1/checkout.html', {
             'cart_data': cart_data,
             'totalcartitems': len(cart_data),
             'cart_total_amount': cart_total_amount,
             'active_address':active_address,
-            'paypal_payment_button':paypal_payment_button
+            'paypal_payment_button':paypal_payment_button,
+            'discount':discount,
+            'total_amount':total_amount
         })
     return HttpResponse("No items in the cart. Please add items before checking out.")
 
@@ -949,9 +980,10 @@ def customer_dashboard(request):
     
         
     orders=CartOrder.objects.filter(user=request.user).order_by("-id")
-    print(orders)
     
     
+    user_account=User.objects.filter(email=request.user)
+    print(user_account)
     
     
     address = Address.objects.filter(user=request.user)
@@ -974,12 +1006,14 @@ def customer_dashboard(request):
     else:
         print("Error")
         
-    
+    wallet_amt=wallet.objects.filter(user=request.user)
     
     context ={
         'user_profile':user_profile,
         'orders':orders,
-        'address':address
+        'address':address,
+        'wallet_amt':wallet_amt,
+        'user_account':user_account
     }
     
     return render(request,'app1/dashboard.html',context)
@@ -1089,34 +1123,225 @@ def place_order(request):
 
 
 
+# wallet order place
+
+
+def wallet_order_place(request):
+    cart_total_amount = 0
+    total_amount = 0
+    
+    
+    if 'cart_data_obj' in request.session:
+        cart_data = request.session['cart_data_obj']
+        for p_id, item in cart_data.items():
+            print(item)
+            products=Product.objects.filter(title=item['title'])
+            for p in products:
+                p.stock_count=int(p.stock_count) - int(item['qty'])
+                p.save() 
+                
+    # user_wallet = get_object_or_404(wallet, user=request.user)
+    user_wallet, created = wallet.objects.get_or_create(user=request.user)
+
+    print(user_wallet.Amount)
+        
+                
+                
+    # store data in database
+    if 'cart_data_obj' in request.session:
+        cart_data = request.session['cart_data_obj']
+        print(cart_data)
+
+        # Calculate total_amount for the entire order
+        applied_coupon = request.session.get('invoice_amt', None)
+    
+
+        if applied_coupon is not None:
+                # If a coupon is applied, use the stored cart_total_amount
+            total_amount = applied_coupon
+            print(total_amount)
+        
+        
+        else:
+            for p_id, item in cart_data.items():
+                try:
+                    # Split the price string into individual prices and convert to float
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    # Sum up the individual prices
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    total_amount += qty * total_price
+                except (ValueError, TypeError):
+                    # Handle conversion errors if qty or total_price is not a valid number
+                    pass
+        total_amount_decimal = Decimal(str(total_amount))
+
+        if user_wallet.Amount < total_amount:
+            messages.error(request, "Wallet money is not enough to purchase this product")
+            return redirect("app1:checkout")
+        else:
+            user_wallet.Amount-=total_amount_decimal
+            user_wallet.save()
+            messages.success(request,f"{total_amount_decimal} has been deducted from your wallet" )
+                
+            
+
+        if request.user.is_authenticated:
+            # Create CartOrder for the entire order only if the user is authenticated
+            order = CartOrder.objects.create(
+                user=request.user,
+                price=total_amount,
+                paid_status=True
+            )
+
+            # Create CartOrderItems for each product in the cart
+            for p_id, item in cart_data.items():
+                try:
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    cart_total_amount += qty * total_price
+
+                    # Create CartOrderItems for each product
+                    CartOrderItems.objects.create(
+                        order=order,
+                        invoice_no="INVOICE_NO-" + str(order.id),
+                        item=item['title'],
+                        image=item['image'],
+                        qty=qty,
+                        price=item['price'],
+                        total=qty * total_price
+                    )
+                except (ValueError, TypeError):
+                    pass
+    
+                
+    #till here
+    del request.session['cart_data_obj']
+        
+   
+            
+    print(user_wallet.Amount)
+           
+    return render(request, 'app1/place-order.html',{'user_wallet.Amount':user_wallet.Amount})
+
+
+
+
+
+
+
+
 # PAYPAL
 
 def payment_completed_view(request):
+    
+    # SAVE TO DATABASE
     cart_total_amount = 0
-
+    total_amount = 0
+    
+    
     if 'cart_data_obj' in request.session:
-        cart_data = request.session.get('cart_data_obj', {})
+        cart_data = request.session['cart_data_obj']
+        for p_id, item in cart_data.items():
+            print(item)
+            products=Product.objects.filter(title=item['title'])
+            for p in products:
+                p.stock_count=int(p.stock_count) - int(item['qty'])
+                p.save() 
+                
+   
+        
+                
+                
+    # store data in database
+    if 'cart_data_obj' in request.session:
+        cart_data = request.session['cart_data_obj']
+        print(cart_data)
 
+        # Calculate total_amount for the entire order
         for p_id, item in cart_data.items():
             try:
                 # Split the price string into individual prices and convert to float
                 prices = [float(price) for price in item.get('price', '').split()]
-                print(prices)
                 # Sum up the individual prices
                 total_price = sum(prices)
-                print(total_price)
                 qty = int(item.get('qty', 0))
-                cart_total_amount += qty * total_price
+                total_amount += qty * total_price
             except (ValueError, TypeError):
                 # Handle conversion errors if qty or total_price is not a valid number
                 pass
+        
+        
             
+        
+
+        if request.user.is_authenticated:
+            # Create CartOrder for the entire order only if the user is authenticated
+            order = CartOrder.objects.create(
+                user=request.user,
+                price=total_amount,
+                paid_status=True
+            )
+
+            # Create CartOrderItems for each product in the cart
+            
+            # coupon check
+            applied_coupon = request.session.get('invoice_amt', None)
+            discount=request.session.get('discount', None)
+
+            if applied_coupon is not None:
+                # If a coupon is applied, use the stored cart_total_amount
+                cart_total_amount = applied_coupon
+                del request.session['invoice_amt']
+                del request.session['discount']
+            
+            
+            # till here
+            
+            
+            
+            
+            else:
+                for p_id, item in cart_data.items():
+                    try:
+                        prices = [float(price) for price in item.get('price', '').split()]
+                        total_price = sum(prices)
+                        qty = int(item.get('qty', 0))
+                        cart_total_amount += qty * total_price
+
+                        # Create CartOrderItems for each product
+                        CartOrderItems.objects.create(
+                            order=order,
+                            invoice_no="INVOICE_NO-" + str(order.id),
+                            item=item['title'],
+                            image=item['image'],
+                            qty=qty,
+                            price=item['price'],
+                            total=qty * total_price
+                        )
+                    except (ValueError, TypeError):
+                        pass
+        
+            
+        #till here
+        del request.session['cart_data_obj']
+            
+        
+        
+        
+        
+        
     
+    # TILL HERE
     return render(request, 'app1/payment-completed.html',{
             'cart_data': cart_data,
             'totalcartitems': len(cart_data),
             'cart_total_amount': cart_total_amount,
-           
+            'total_amount':total_amount,
+            'discount':discount
+            
+        
         })
 
 

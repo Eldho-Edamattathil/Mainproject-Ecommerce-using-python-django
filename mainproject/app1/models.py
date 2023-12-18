@@ -274,3 +274,14 @@ class wishlist_model(models.Model):
   
   class Meta:
     verbose_name_plural="Wishlists"
+    
+    
+class wallet(models.Model):
+  user=models.ForeignKey(User,on_delete=models.CASCADE)
+  Amount =models.DecimalField(max_digits=10,decimal_places=2,default=1.99)
+  
+  class Meta:
+    verbose_name_plural="Wallet"
+    
+  def __str__(self):
+    return self.user.email 

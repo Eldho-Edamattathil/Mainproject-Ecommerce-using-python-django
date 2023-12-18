@@ -1,5 +1,5 @@
 from django.shortcuts import render,redirect,get_object_or_404
-from app1.models import Product,Category,ProductImages,Coupon
+from app1.models import Product,Category,ProductImages,Coupon,wallet
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_control
 from admindash.forms import CreateProductForm,ProductImagesForm,CouponForm
@@ -535,10 +535,14 @@ def available_category(request,cid):
 
 def order_list(request):
     order=CartOrder.objects.all().order_by("-id")
+    p=Paginator(CartOrder.objects.all().order_by("-id"),10)
+    page=request.GET.get('page')
+    orders=p.get_page(page)
     
 
     context = {
         'order': order,
+        'orders':order
        
     }
     
@@ -546,9 +550,28 @@ def order_list(request):
     
     
     return render(request, 'adminside/order-list.html',{
-        'order':order
+        'order':order,'orders':orders
     })
     
+    
+    
+    
+def update_product_status(request, id):
+    if request.method == 'POST':
+        new_status = request.POST.get('product_status')
+        order = get_object_or_404(CartOrder, id=id)
+        order.product_status = new_status
+        order.save()
+        
+        products = CartOrderItems.objects.filter(order=order)
+        for p in products:
+            productss = Product.objects.filter(title=p.item)
+            for s in productss:
+                s.stock_count = int(s.stock_count) + p.qty
+                s.save()
+
+    # Redirect back to the original page or a specific URL
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
     
     
 def admin_order_detail(request,id):
@@ -600,6 +623,8 @@ def admin_order_detail(request,id):
         
 def admin_cancel_order(request, id):
     order = get_object_or_404(CartOrder, id=id)
+    # user_wallet = get_object_or_404(wallet, user=request.user)
+    user_wallet, created = wallet.objects.get_or_create(user=request.user)
 
     if order.product_status == 'cancelled':
         messages.warning(request, f"Order {order.id} is already cancelled.")
@@ -607,6 +632,12 @@ def admin_cancel_order(request, id):
         # Update order status to 'cancelled'
         order.product_status = 'cancelled'
         order.save()
+        
+        if order.paid_status==True:
+            user_wallet.Amount+=order.price
+            user_wallet.save()
+            messages.warning(request,"Refund amount has been added to the wallet")
+            
 
         # Update product stock count
         products = CartOrderItems.objects.filter(order=order)

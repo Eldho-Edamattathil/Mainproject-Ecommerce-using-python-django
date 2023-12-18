@@ -33,3 +33,10 @@ class Profileform(forms.ModelForm):
     
     
 
+class PasswordChangeForm(UserCreationForm):
+    password1 = forms.CharField(max_length=30,widget=forms.PasswordInput(attrs= {"placeholder":" New Password"}), required=True, help_text='Required. 30 characters or fewer.')
+    password2 = forms.CharField(max_length=30,widget=forms.PasswordInput(attrs= {"placeholder":"Confirm Password"}), required=True, help_text='Required. 30 characters or fewer.')
+    
+    class Meta:
+        model = User
+        fields = ['password1','password2']

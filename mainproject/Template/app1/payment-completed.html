@@ -181,6 +181,9 @@
           <thead>
             <tr>
               <td class="text-center col-xs-1">Sub Total</td>
+              {% if discount   %}
+              <td class="text-center col-xs-1">Coupon Discount</td>
+              {% endif  %}
               <!-- <td class="text-center col-xs-1">Discount</td>
               <td class="text-center col-xs-1">Total</td>
               <td class="text-center col-xs-1">Tax</td> -->
@@ -189,7 +192,13 @@
           </thead>
           <tbody>
             <tr>
-              <th class="text-center rowtotal mono">${{cart_total_amount}}</th>
+              
+              
+              <th class="text-center rowtotal mono">${{total_amount}}</th>
+              
+              {% if discount   %}
+              <th class="text-center rowtotal mono">-${{discount}}</th>
+              {% endif  %}
               <!-- <th class="text-center rowtotal mono">-$1,800.00</th>
               <th class="text-center rowtotal mono">$16,440.00</th>
               <th class="text-center rowtotal mono">$3,312.00</th> -->

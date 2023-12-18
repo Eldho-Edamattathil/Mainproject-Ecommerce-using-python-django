@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .forms import CreateUserForm,Profileform
+from .forms import CreateUserForm,Profileform,PasswordChangeForm
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from app1.backends import EmailBackend  # Import your custom authentication backend
@@ -11,7 +11,7 @@ from django.views.decorators.cache import cache_control
 from django.http import HttpResponseRedirect,HttpResponseBadRequest
 from django.urls import reverse
 from app1.models import UserDetails
-
+from django.contrib.auth import update_session_auth_hash
 
 from userauths.models import User  # Import your custom user model
 
@@ -266,3 +266,38 @@ def profile_update(request):
         'profile':profile
         }
     return render(request,'userauths/profile-edit.html',context)
+
+
+
+def change_password(request):
+    if request.method == 'POST':
+        old_password = request.POST.get('password')
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        # Manual validation
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Current password is incorrect.')
+            return redirect('userauths:change-password')
+
+        if new_password != confirm_password:
+            messages.error(request, 'New Password and Confirm Password do not match.')
+            return redirect('userauths:change-password')
+        
+        if old_password == new_password:
+            messages.error(request, 'Old and New password are same.')
+            return redirect('userauths:change-password')
+
+        if len(new_password) < 8:
+            messages.error(request, 'New Password must be at least 8 characters long.')
+            return redirect('userauths:change-password')
+
+        # If all validations pass, update the password
+        request.user.set_password(new_password)
+        request.user.save()
+
+        update_session_auth_hash(request, request.user)  # Update the session with the new password
+        messages.success(request, 'Your password was successfully updated!')
+        return redirect('app1:dashboard')
+
+    return render(request, 'app1/dashboard.html')

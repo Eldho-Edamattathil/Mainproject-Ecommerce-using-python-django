@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.conf import settings
 # Register your models here.
 from django.contrib.auth import get_user_model
-from app1.models import Product, Category, ProductImages,Size,Variants,CartOrderItems,CartOrder,Address,UserDetails,Coupon,wishlist_model
+from app1.models import Product, Category, ProductImages,Size,Variants,CartOrderItems,CartOrder,Address,UserDetails,Coupon,wishlist_model,wallet
 # from userauths.models import profile
 
 
@@ -56,6 +56,10 @@ class CouponAdmin(admin.ModelAdmin):
 class WishlistAdmin(admin.ModelAdmin):
   list_display=['user','product','Date']
   
+  
+  
+class walletAdmin(admin.ModelAdmin):
+  list_display=['user','Amount']
 
 admin.site.register(Product,ProductAdmin)
 admin.site.register(Category,CategoryAdmin)
@@ -67,6 +71,7 @@ admin.site.register(Address,AddressAdmin)
 admin.site.register(UserDetails,UserDetailsAdmin)
 admin.site.register(Coupon,CouponAdmin)
 admin.site.register(wishlist_model,WishlistAdmin)
+admin.site.register(wallet,walletAdmin)
 
 
 

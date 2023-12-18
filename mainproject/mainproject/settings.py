@@ -165,5 +165,12 @@ EMAIL_PORT=587
 SHORTUUID_FIELD_SUFFIX = '_short'
 
 
-PAYPAL_RECEIVER_EMAIL="eldhogeorg@gmail.com"
+PAYPAL_RECEIVER_EMAIL="sb-esx47o28804878@business.example.com"
 PAYPAL_TEST=True
+
+# sb-dvqbs28803619@personal.example.com
+# pass: _=sa##T3
+
+
+# sb-o81l528804913@personal.example.com
+# S^']e2Z4

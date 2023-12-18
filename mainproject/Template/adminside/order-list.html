@@ -38,18 +38,35 @@
                                                         </thead>
                                                         <tbody>
                                                          
-                                                          {% for o in order  %}
+                                                          {% for o in orders  %}
                                                             <tr>
                                                                 <td>{{o.user}}</td>
                                                                 <td>INVOICE_NO-{{o.id}}</td>
                                                                 <td>{{o.order_date}}</td>
-                                                                {% if paid_status %}
-                                                                <td>Payment Received</td>
+                                                                {% if o.paid_status %}
+                                                                <td><span class="text-success">Payment Received</span></td>
                                                                 {% else %}
-                                                                <td class="text-danger" >X</td>
+                                                                <td class="text-danger" >COD</td>
                                                                 {% endif %}
-                                                                <td>
-                                                                 {{o.product_status}}
+                                                                <td><div class="d-flex">
+                                                                    <div>
+                                                                    <form method="post" action="{% url 'admindash:update-product-status' o.id  %}">
+                                                                        {% csrf_token %}
+                                                                        
+                                                                 <!-- {{o.product_status}} -->
+                                                                 <select name="product_status" id="product_status" {% if o.product_status == 'cancelled' %}disabled{% endif %}>
+                                                                    <option value="pending" {% if o.product_status == 'processing' %}selected{% endif %}>Processing</option>
+                                                                    <option value="shipped" {% if o.product_status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                                                    <option value="delivered" {% if o.product_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                                                    <option value="cancelled" {% if o.product_status == 'cancelled' %}selected{% endif %}>cancelled</option>
+                                                                    <!-- Add other options as needed -->
+                                                                </select>
+                                                                </div>
+                                                                <div>
+                                                                <button type="submit">✔</button>
+                                                            </div>
+                                                        </div>
+                                                                </form>
                                                             </td>
                                                                 <td>{{o.price}}</td>
                                                                 
@@ -78,6 +95,25 @@
             </div>
         </section>
     </main>
+
+    <br><br>
+    {% if orders.has_previous %}
+<a href="?page=1">&laquo First</a>
+<a href="?page={{orders.previous_page_number}}">Previous</a>
+
+
+{%  endif %}
+Page {{orders.number}} of {{orders.paginator.num_pages}}
+{% if orders.has_next %}
+<a href="?page={{orders.next_page_number}}">Next</a>
+<a href="?page={{orders.paginator.num_pages}}">Last  &raquo</a>
+
+{% endif %}
+
+
+
+
+
 
 {% endblock %}
    

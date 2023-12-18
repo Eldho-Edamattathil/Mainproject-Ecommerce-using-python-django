@@ -56,6 +56,11 @@ urlpatterns = [
   path('checkout/place-order/', views.place_order,name= 'place-order'),
   
   
+  # wallet_order_place
+  
+  path('wallet-order-place',views.wallet_order_place, name="wallet-order-place"),
+  
+  
   # paypal path
   
   path('paypal/', include('paypal.standard.ipn.urls')),

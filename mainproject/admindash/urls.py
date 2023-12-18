@@ -34,6 +34,8 @@ urlpatterns = [
     
     path('delete-coupon/<int:id>/',views.delete_coupon, name='delete-coupon'),
     
+    path('update-product-status/<int:id>/', views.update_product_status, name='update-product-status')
+    
     
     
     
