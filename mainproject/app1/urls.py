@@ -13,6 +13,8 @@ urlpatterns = [
   path('category/', views.category_list, name = 'category-list'),
    path('category/<cid>/', views.category_product_list, name = 'category-product-list'),
    
+   path("ajax-add-review/<int:pid>/", views.add_ajax_review, name="ajax-add-review"),
+   
    #search 
    
   path('search/',views.search_view,name='search'),

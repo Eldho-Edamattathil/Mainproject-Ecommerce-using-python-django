@@ -8,20 +8,33 @@ from django.forms import inlineformset_factory
 from django.contrib import messages
 from django.core.paginator import Paginator
 from app1.models import CartOrder,CartOrderItems
+import calendar
+from django.db.models.functions import ExtractMonth
+from django.db.models import Count,Avg
 
 
 @login_required(login_url='adminside:admin_login')  # Use the named URL pattern
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def dashboard(request):
-    if not request.user.is_authenticated:
-        return redirect('admindash:admin_login')
+    # if not request.user.is_authenticated:
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
 
     product_count=Product.objects.count()
     category_count=Category.objects.count()
+    orders= CartOrder.objects.annotate(month=ExtractMonth("order_date")).values("month").annotate(count=Count("id")).values("month","count")
+    month=[]
+    total_orders=[]
+    for i in orders:
+        month.append(calendar.month_name[i["month"]])
+        total_orders.append(i["count"])
     
     context={
         'product_count':product_count,
-        'category_count':category_count
+        'category_count':category_count,
+        'month':month,
+        'total_orders':total_orders
+        
     }
 
     return render(request, 'adminside/admin_index.html', context)
@@ -90,10 +103,14 @@ def admin_products_list(request):
 #     return render(request, 'adminside/admin_products_details.html', context)
 
 # gpt
+
+@login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_products_details(request, pid):
-    if not request.user.is_authenticated:
+    if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
+    # if not request.user.is_superadmin:
+    #     return redirect('adminside:admin_login')
 
     try:
         product = Product.objects.get(pid=pid)
@@ -207,11 +224,12 @@ def admin_products_details(request, pid):
 
 
   
-@login_required(login_url='adminside:admin_login')
-  
+
+@login_required(login_url='adminside:admin_login') 
 def block_unblock_products(request, pid):
-  if not request.user.is_authenticated:
-        return HttpResponse("Unauthorized", status=401)
+    
+  if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
   product = get_object_or_404(Product, pid=pid)
   if product.status:
     product.status=False
@@ -269,6 +287,8 @@ def block_unblock_products(request, pid):
 
 # new add produt
 
+
+@login_required(login_url='adminside:admin_login')
 def add_product(request):
     if not request.user.is_authenticated:
         return HttpResponse("Unauthorized", status=401)
@@ -366,10 +386,10 @@ def add_product(request):
 
 #ends here
 
-
+@login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_product(request,pid):
-    if not request.user.is_authenticated:
+    if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
     try:
         product = Product.objects.get(pid=pid)
@@ -380,9 +400,11 @@ def delete_product(request,pid):
     
     
     
-    
+@login_required(login_url='adminside:admin_login')  
 def admin_category_list(request):
-    if not request.user.is_authenticated:
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
     
     categories = Category.objects.all()
@@ -393,7 +415,11 @@ def admin_category_list(request):
     
     return render(request,'adminside/admin_category_list.html',context)
 
+
+@login_required(login_url='adminside:admin_login')
 def admin_add_category(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         cat_title = request.POST.get('category_name')
         if Category.objects.filter(title=cat_title).exists():
@@ -452,7 +478,7 @@ def admin_add_category(request):
 
     # Render the template even for GET requests to display the form
     return render(request, 'adminside/admin_category_edit.html', context)
-
+@login_required(login_url='adminside:admin_login')
 def admin_category_edit(request, cid):
     if not request.user.is_authenticated:
         return redirect('adminside:admin_login')
@@ -486,10 +512,12 @@ def admin_category_edit(request, cid):
     return render(request, 'adminside/admin_category_edit.html', context)
 
 
+
+@login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_category(request,cid):
-    if not request.user.is_authenticated:
-        return HttpResponse("Unauthorized", status=401)
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     try:
         category=Category.objects.get(cid=cid)
     except ValueError:
@@ -498,6 +526,8 @@ def delete_category(request,cid):
 
     return redirect('admindash:admin_category_list')
 
+
+@login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def available_category(request,cid):
     if not request.user.is_authenticated:
@@ -532,8 +562,11 @@ def available_category(request,cid):
 
 
 # order management
-
+@login_required(login_url='adminside:admin_login')
 def order_list(request):
+    if not request.user.is_authenticated and not request.user.is_superadmin:
+        
+        return redirect('adminside:admin_login')
     order=CartOrder.objects.all().order_by("-id")
     p=Paginator(CartOrder.objects.all().order_by("-id"),10)
     page=request.GET.get('page')
@@ -555,8 +588,10 @@ def order_list(request):
     
     
     
-    
+@login_required(login_url='adminside:admin_login')   
 def update_product_status(request, id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         new_status = request.POST.get('product_status')
         order = get_object_or_404(CartOrder, id=id)
@@ -620,8 +655,10 @@ def admin_order_detail(request,id):
     
 
     
-        
+@login_required(login_url='adminside:admin_login')      
 def admin_cancel_order(request, id):
+    # if not request.user.is_superadmin:
+    #     return redirect('adminside:admin_login')
     order = get_object_or_404(CartOrder, id=id)
     # user_wallet = get_object_or_404(wallet, user=request.user)
     user_wallet, created = wallet.objects.get_or_create(user=request.user)
@@ -631,10 +668,13 @@ def admin_cancel_order(request, id):
     else:
         # Update order status to 'cancelled'
         order.product_status = 'cancelled'
+        order.wallet_status=True
         order.save()
         
         if order.paid_status==True:
             user_wallet.Amount+=order.price
+            # credit=order.price
+            # request.session['credit']=credit
             user_wallet.save()
             messages.warning(request,"Refund amount has been added to the wallet")
             
@@ -652,8 +692,10 @@ def admin_cancel_order(request, id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))    
 
 
-
+@login_required(login_url='adminside:admin_login')
 def admin_coupon(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     coupon=Coupon.objects.all()
     
     
@@ -662,8 +704,10 @@ def admin_coupon(request):
     }
     return render(request,'adminside/admin-coupon.html',context)
 
-
+@login_required(login_url='adminside:admin_login')
 def create_coupon(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         code = request.POST['code']
         discount = request.POST['discount']
@@ -695,8 +739,10 @@ def create_coupon(request):
     return render(request, 'adminside/create-coupon.html')
 
 
-
+@login_required(login_url='adminside:admin_login')
 def edit_coupon(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     
     coupon_code = get_object_or_404(Coupon, id=id)
     print(f'Active Date: {coupon_code.active_date}')
@@ -725,11 +771,14 @@ def edit_coupon(request,id):
         
     
     return render (request, 'adminside/edit-coupon.html',{'coupon_code':coupon_code})
-        
+
+
+@login_required(login_url='adminside:admin_login')        
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def delete_coupon(request,id):
-    if not request.user.is_authenticated:
-        return HttpResponse("Unauthorized", status=401)
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    
     try:
         coupon= get_object_or_404(Coupon, id=id)
     except ValueError:

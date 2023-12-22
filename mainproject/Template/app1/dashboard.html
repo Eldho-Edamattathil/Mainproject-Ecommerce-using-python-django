@@ -322,7 +322,7 @@
                                     <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab">
                                         <div class="card">
                                             <div class="card-header">
-                                                <h5>Account Details</h5>
+                                                <h3>Wallet</h3>
                                             </div>
                                            
                                             <!-- <div class="card-body"> -->
@@ -340,12 +340,82 @@
                                                     {% if wallet_amt %}
                                                         <div class="wallet">
                                                             {% for w in wallet_amt %}
-                                                                <h1>Your Wallet</h1>
-                                                                <p>Current Balance:</p>
-                                                                <h2>${{ w.Amount }}</h2>
+                                                                <h1 class="text-success">Your Wallet</h1>
+                                                                <p class="text-danger">Current Balance:</p>
+                                                                <h2 class="text-primary">${{ w.Amount }}</h2>
                                                                 <!-- <button>Add Money</button> -->
                                                             {% endfor %}
                                                         </div>
+
+                                                        <p>Wallet History</p>
+                                                <div class="tab-pane" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+                                                    <div class="card">
+                                                        <div class="card-header">
+                                                            <h5 class="mb-0">wallet</h5>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="table-responsive">
+                                                                <table class="table">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Order</th>
+                                                                            <th>Date</th>
+                                                                           
+                                                                            <th>Amount</th>
+                                                                            <th>Payment Status</th>
+                                                                            
+                                                                            
+            
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                      <!-- {% for o in wallet_orders  %}
+                                                                        <tr>
+                                                                            <td>INVOICE_NO-{{o.id}}</td>
+                                                                            <td>{{o.order_date}}</td>
+                                                                           
+                                                                            <td>{{o.price}}</td>
+                                                                            {% if o.product_status == 'cancelled' %}
+                                                                            <td class="text-danger">Amount credited to wallet</td>
+                                                                            {% else %}
+                                                                            <td class="text-danger">Amount debited from wallet</td>
+                                                                            {% endif %}
+                                                                            
+                                                                            
+                                                                        </tr>
+                                                                        {% endfor %} -->
+
+                                                                        
+                                                                        {% for o in wallet_debits_qs %}
+                                                                        <tr>
+                                                                            <td>INVOICE_NO-{{ o.id }}</td>
+                                                                            <td>{{ o.order_date }}</td>
+                                                                            <td>{{ o.price }}</td>
+                                                                            <td class="text-danger">Amount debited from wallet</td>
+                                                                        </tr>
+                                                                        {% endfor %}
+                                                                
+                                                                        {% for o in wallet_credits_qs %}
+                                                                        <tr>
+                                                                            <td>INVOICE_NO-{{ o.id }}</td>
+                                                                            <td>{{ o.order_date }}</td>
+                                                                            <td>{{ o.price }}</td>
+                                                                            <td class="text-success">Amount credited to wallet</td>
+                                                                        </tr>
+                                                                        {% endfor %}
+
+                                                                       
+
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+
+
+
                                                     {% else %}
                                                         <!-- <p>You don't have a wallet. Create a wallet to start adding money.</p> -->
                                                         <!-- Display a default wallet with zero balance -->
@@ -357,7 +427,8 @@
                                                         </div>
                                                     {% endif %}
                                                 </div>
-
+                                            
+                                                
 
 
 

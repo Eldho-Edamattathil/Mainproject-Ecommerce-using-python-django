@@ -156,9 +156,19 @@
                                                 <tr>
                                                     <td class="cart_total_label">Cart Subtotal</td>
                                                     <div id="cart-total">
+                                                    {% if money != 0  %}
+                                                    <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">{{money|floatformat:2}}</span></td>
+                                                    {% else %}
                                                     <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">{{cart_total_amount|floatformat:2}}</span></td>
+                                                    {% endif %}
                                                 </div>
                                                 </tr>
+                                                {% if final_money != 0 %}
+                                                    <tr>
+                                                        <th>Coupon Discount</th>
+                                                        <td colspan="2"><em>-${{ final_money|floatformat:0 }}</em></td>
+                                                    </tr>
+                                                {% endif %}
                                                 <tr>
                                                     <td class="cart_total_label">Shipping</td>
                                                     <td class="cart_total_amount"> <i class="ti-gift mr-5"></i>Free Shipping </td>

@@ -584,3 +584,62 @@ $(document).on("click",".delete-wishlist-product",function(){
     
 
 })
+
+
+
+
+$("#commentForm").submit(function(e){
+    e.preventDefault();
+
+    $.ajax({
+        data: $(this).serialize(),
+
+        method: $(this).attr("method"),
+
+
+        url: $(this).attr("action"),
+
+        dataType: "json",
+
+        success: function(res){
+            console.log("comment saved to db");
+
+            if (res.bool == true) {
+                $("#review-res").html("Review Added Successfully");
+                $(".hide-comment-form").hide();
+                $(".add-review").hide();
+            } 
+            if (res.bool ==false) {
+                $("#review-res").html("Review not saved");
+                $(".hide-comment-form").hide();
+                $(".add-review").hide();
+            }
+
+                
+                                                                
+            
+           
+           
+        }
+    
+    })
+        
+    
+})            
+           
+           
+        
+
+
+
+                                                               
+                                                                    
+                                                                        
+                                                                       
+                                                                   
+                                                                   
+                                                                   
+                                                                       
+                                                                          
+        
+

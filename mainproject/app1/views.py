@@ -1,6 +1,6 @@
-from django.db.models import Count
+from django.db.models import Count,Avg
 from django.shortcuts import render,redirect
-from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model,wallet
+from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model,wallet,ProductReview
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
@@ -22,6 +22,7 @@ from django.http import HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from userauths.models import User
+from app1.forms import ProductReviewForm
 
 
 
@@ -119,19 +120,154 @@ def product_detail(request, pid):
     products = Product.objects.filter(category=product.category).exclude(pid=pid)[:4]
     sizes = Size.objects.all()
     variants = Variants.objects.filter(product=product)
+    review=ProductReview.objects.filter(product=product).order_by("-date")
+    average_rating =ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
+    
+    
+    review_form=ProductReviewForm()
     
 
     context = {
         "product": product,
         "p_image": p_image,
+        'review_form':review_form,
         "category": category,
         "products": products,
         "sizes": sizes,
+        'review':review,
+        'average_rating':average_rating,
         "variants": variants  # Pass variants to the template
     }
 
     return render(request, 'app1/product_detail.html', context)
 
+# Review View
+
+# def add_ajax_review(request,pid):
+#     product=Product.objects.get(pk=pid)
+#     user=request.user
+    
+#     review = ProductReview.objects.create(
+#         user=user,
+#         product=product,
+#         review=request.POST['review'],
+#         rating=request.POST['rating'],
+#     )
+    
+#     context={
+#         "user":user.username,
+#         "review":request.POST['review'],
+#         "rating":request.POST['rating']
+        
+        
+        
+#     }
+    
+#     average_reviews=ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
+    
+    
+#     return JsonResponse(
+#         {
+        
+#         'bool':True,
+#         'context':context,
+#         'average_reviews':average_reviews
+#         }
+    
+#         )
+
+# def add_ajax_review(request, pid):
+#     if request.method == 'POST':
+#         try:
+#             product = Product.objects.get(pk=pid)
+#             user = request.user
+#             review_text = request.POST.get('review', '')
+#             rating = float(request.POST.get('rating', 0))
+
+#             # Create a new ProductReview
+#             review = ProductReview.objects.create(
+#                 user=user,
+#                 product=product,
+#                 review=review_text,
+#                 rating=rating,
+#             )
+
+#             # Calculate average rating for the product
+#             average_reviews = ProductReview.objects.filter(product=product).aggregate(avg_rating=Avg("rating"))
+
+#             context = {
+#                 "user": user.username,
+#                 "review": review_text,
+#                 "rating": rating,
+#             }
+            
+            
+
+#             return JsonResponse({
+#                 'success': True,
+#                 'context': context,
+#                 'average_reviews': average_reviews['avg_rating'] if average_reviews['avg_rating'] else 0,
+#             })
+
+#         except Product.DoesNotExist:
+#             return JsonResponse({'success': False, 'error': 'Product does not exist'})
+
+#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+def add_ajax_review(request, pid):
+    if not request.user.is_authenticated:
+        messages.warning(request,"Please log in to write review")
+        # return redirect("app1:index")
+        return JsonResponse({'redirect': '/app1/index/'})
+        
+    product = get_object_or_404(Product, pk=pid)
+    image=UserDetails.objects.filter(user=request.user)
+    print(image)
+    user = request.user
+    
+    
+    has_purchased = CartOrderItems.objects.filter(
+        order__user=user,
+        item=product.title,  
+    ).exists()
+    
+
+    if not has_purchased:
+        messages.warning(request, "You can only write a review for products you have purchased.")
+        return JsonResponse({'bool': False})
+
+    try:
+        
+        review = ProductReview.objects.create(
+            user=user,
+            product=product,
+            review=request.POST['review'],
+            rating=request.POST['rating'],
+        )
+
+        context = {
+            "user": user.username,
+            # "image":image.image,
+            "review": request.POST['review'],
+            "rating": request.POST['rating'],
+        }
+
+        average_reviews = ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
+
+        # Convert the Decimal to a float for JSON serialization
+        average_rating = float(average_reviews['rating']) if average_reviews['rating'] else 0.0
+
+        return JsonResponse({
+            'bool': True,
+            'context': context,
+            'average_reviews': average_rating,
+        })
+
+    except Exception as e:
+        return JsonResponse({'bool': False, 'error': str(e)})
+
+
+    
 
 def search_view(request):
     query =request.GET.get('q')
@@ -149,16 +285,7 @@ def search_view(request):
     return render(request,'app1/search.html',context)
 
 
-# def filter_product(request):
-    categories =request.GET.getlist('Category[]')
-    
-    products =Product.objects.filter(status=True).order_by('-id').distinct()
-    
-    if len(categories) > 0:
-        products=products.filter(category__id__in=categories).distinct()
-        
-    data =render_to_string('app1/async/product-list.html',{"products":products})
-    return JsonResponse ({"data":data})
+
     
 def filter_product(request):    
     try:
@@ -183,36 +310,6 @@ def filter_product(request):
             return JsonResponse({"data": data})
     except Exception as e:
             return JsonResponse({"error": str(e)})
-
-# def filter_product(request):
-#     try:
-#         # Get selected categories
-#         categories = request.GET.getlist('category[]')
-#         print("Selected Categories:", categories)
-
-#         # Get price range
-#         min_price = Decimal(request.GET.get('min_price', 0))
-#         max_price = Decimal(request.GET.get('max_price', float('inf')))
-#         print("Price Range:", min_price, max_price)
-
-#         # Filter products based on status and categories
-#         products = Product.objects.filter(status=True).order_by('-id').distinct()
-#         print("All Products:", products)
-
-#         if len(categories) > 0:
-#             products = products.filter(category__cid__in=categories).distinct()
-#             print("Filtered by Categories:", products)
-
-#         # Apply additional filters, e.g., price range
-#         products = products.filter(price__range=(min_price, max_price))
-#         print("Filtered by Price Range:", products)
-
-#         # Render the filtered products
-#         data = render_to_string('app1/async/product-list.html', {"products": products})
-
-#         return JsonResponse({"data": data})
-#     except Exception as e:
-#         return JsonResponse({"error": str(e)})
 
 
     
@@ -248,7 +345,7 @@ def filter_product(request):
     
         
     
-# db add to cart
+
 
 
 # working cart
@@ -265,6 +362,17 @@ def add_to_cart(request):
             'image': request.GET['image'],
         }
     }
+    
+    
+    # title=request.GET['title']
+    # qty=request.GET['qty']
+    # products=Product.object.filter(title=title)
+    # if products.stock_count < qty:
+    #     messages.error(request, f'Only {products.stock_count} are avaiable')
+        
+    
+    
+    
 
     if 'cart_data_obj' in request.session:
         cart_data = request.session['cart_data_obj']
@@ -387,6 +495,8 @@ def add_to_cart(request):
 
 def cart_view(request):
     cart_total_amount = 0
+    final_money=0
+    money=0
     print(request.session.items())
     
     
@@ -415,8 +525,16 @@ def cart_view(request):
             except (ValueError, TypeError):
                 # Handle conversion errors if qty or total_price is not a valid number
                 pass
-    
-        
+            
+            # title=item.get('title',0)
+            # products=Product.objects.filter(title=title)
+            # print(products)
+            # for p in products:
+            #     stock_count = int(p.stock_count)
+
+            #     if stock_count < qty:
+            #         messages.error(request, f'Only {p.stock_count} are avaiable')
+            
             
         # Coupon
         if request.method == 'POST':
@@ -436,8 +554,10 @@ def cart_view(request):
                         messages.warning(request, 'Invalid coupon code or expired')
                     else:
                         # Apply the coupon discount to the cart total
+                        money=cart_total_amount
                         cart_total_amount -= (cart_total_amount * coupon.discount) / 100
                         request.session['applied_coupon'] = cart_total_amount
+                        final_money=money-cart_total_amount
                         messages.success(request, f'Coupon "{coupon.code}" applied successfully')
 
                 except Coupon.DoesNotExist:
@@ -446,12 +566,14 @@ def cart_view(request):
             coupon_form = CouponForm()
             
             
-
+        
         
         
 
         return render(request, 'app1/cart.html', {
             'cart_data': cart_data,
+            'final_money':final_money,
+            'money':money,
             'totalcartitems': len(cart_data),
             'cart_total_amount': cart_total_amount,
             'coupon_form': coupon_form,  # Pass the coupon form to the template
@@ -888,11 +1010,18 @@ def checkout_view(request):
             #         pass
             
         # Clear the cart data from the session after processing the order
+        # try:
+        #     active_address= Address.objects.get(user=request.user, status =True)
+        # except:
+        #     messages.warning(request,"There are multiple. Only one should be activated")
+        #     active_address=None
+        
         try:
-            active_address= Address.objects.get(user=request.user, status =True)
-        except:
-            messages.warning(request,"There are multiple. Only one should be activated")
-            active_address=None
+            active_address = Address.objects.get(user=request.user, status=True)
+        except Address.DoesNotExist:
+            messages.warning(request, "Please select an address before proceeding.")
+            return redirect('app1:dashboard')  # Redirect to the address selection page
+
         # del request.session['cart_data_obj']
 
         
@@ -980,10 +1109,38 @@ def customer_dashboard(request):
     
         
     orders=CartOrder.objects.filter(user=request.user).order_by("-id")
+    # for o in orders:
+    #     if o.product_status == 'cancelled':
+    #         wallet_orders=CartOrder.objects.filter(user=request.user,wallet_status=True).order_by('-id')
+    #     else:
+    #         wallet_orders=CartOrder.objects.filter(user=request.user,wallet_status=True).order_by('-id')
+    
+    wallet_debits = []
+    wallet_credits = []
+    for order in orders:
+       
+        if order.product_status == 'cancelled':
+            
+            if order.wallet_status:
+                
+                wallet_credits.append(order)
+                
+        else:
+            
+            if order.wallet_status:
+               
+                wallet_debits.append(order)
+                
+    wallet_debits_qs = CartOrder.objects.filter(user=request.user, wallet_status=True, product_status='processing').order_by('-id')
+
+    
+    wallet_credits_qs = CartOrder.objects.filter(user=request.user, wallet_status=True, product_status='cancelled').order_by('-id')
+    
+    
+    
     
     
     user_account=User.objects.filter(email=request.user)
-    print(user_account)
     
     
     address = Address.objects.filter(user=request.user)
@@ -1013,7 +1170,11 @@ def customer_dashboard(request):
         'orders':orders,
         'address':address,
         'wallet_amt':wallet_amt,
-        'user_account':user_account
+        # 'wallet_orders':wallet_orders,
+        'wallet_debits_qs':wallet_debits_qs,
+        'wallet_credits_qs':wallet_credits_qs,
+        'user_account':user_account,
+        # 'latest_order':latest_order
     }
     
     return render(request,'app1/dashboard.html',context)
@@ -1131,6 +1292,7 @@ def wallet_order_place(request):
     total_amount = 0
     
     
+    
     if 'cart_data_obj' in request.session:
         cart_data = request.session['cart_data_obj']
         for p_id, item in cart_data.items():
@@ -1152,27 +1314,31 @@ def wallet_order_place(request):
         cart_data = request.session['cart_data_obj']
         print(cart_data)
 
-        # Calculate total_amount for the entire order
+       
         applied_coupon = request.session.get('invoice_amt', None)
+        
     
 
         if applied_coupon is not None:
-                # If a coupon is applied, use the stored cart_total_amount
+            del request.session['invoice_amt']
             total_amount = applied_coupon
-            print(total_amount)
+            
+           
+            
         
         
         else:
+            total_amount=0
             for p_id, item in cart_data.items():
                 try:
-                    # Split the price string into individual prices and convert to float
+                    
                     prices = [float(price) for price in item.get('price', '').split()]
-                    # Sum up the individual prices
+                    
                     total_price = sum(prices)
                     qty = int(item.get('qty', 0))
                     total_amount += qty * total_price
                 except (ValueError, TypeError):
-                    # Handle conversion errors if qty or total_price is not a valid number
+                  
                     pass
         total_amount_decimal = Decimal(str(total_amount))
 
@@ -1180,6 +1346,7 @@ def wallet_order_place(request):
             messages.error(request, "Wallet money is not enough to purchase this product")
             return redirect("app1:checkout")
         else:
+            
             user_wallet.Amount-=total_amount_decimal
             user_wallet.save()
             messages.success(request,f"{total_amount_decimal} has been deducted from your wallet" )
@@ -1187,14 +1354,14 @@ def wallet_order_place(request):
             
 
         if request.user.is_authenticated:
-            # Create CartOrder for the entire order only if the user is authenticated
+           
             order = CartOrder.objects.create(
                 user=request.user,
                 price=total_amount,
-                paid_status=True
+                paid_status=True,
+                wallet_status=True,
             )
-
-            # Create CartOrderItems for each product in the cart
+           
             for p_id, item in cart_data.items():
                 try:
                     prices = [float(price) for price in item.get('price', '').split()]
@@ -1202,7 +1369,7 @@ def wallet_order_place(request):
                     qty = int(item.get('qty', 0))
                     cart_total_amount += qty * total_price
 
-                    # Create CartOrderItems for each product
+                    
                     CartOrderItems.objects.create(
                         order=order,
                         invoice_no="INVOICE_NO-" + str(order.id),
@@ -1216,8 +1383,9 @@ def wallet_order_place(request):
                     pass
     
                 
-    #till here
+    
     del request.session['cart_data_obj']
+    
         
    
             
@@ -1236,7 +1404,7 @@ def wallet_order_place(request):
 
 def payment_completed_view(request):
     
-    # SAVE TO DATABASE
+   
     cart_total_amount = 0
     total_amount = 0
     
@@ -1258,19 +1426,30 @@ def payment_completed_view(request):
     if 'cart_data_obj' in request.session:
         cart_data = request.session['cart_data_obj']
         print(cart_data)
+        
+        applied_coupon = request.session.get('invoice_amt', None)
+        discount=request.session.get('discount', None)
 
-        # Calculate total_amount for the entire order
-        for p_id, item in cart_data.items():
-            try:
-                # Split the price string into individual prices and convert to float
-                prices = [float(price) for price in item.get('price', '').split()]
-                # Sum up the individual prices
-                total_price = sum(prices)
-                qty = int(item.get('qty', 0))
-                total_amount += qty * total_price
-            except (ValueError, TypeError):
-                # Handle conversion errors if qty or total_price is not a valid number
-                pass
+        if applied_coupon is not None:
+            # If a coupon is applied, use the stored cart_total_amount
+            total_amount = applied_coupon
+            del request.session['invoice_amt']
+            del request.session['discount']
+        else:
+
+            total_amount=0
+            discount=0
+            for p_id, item in cart_data.items():
+                try:
+                    # Split the price string into individual prices and convert to float
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    # Sum up the individual prices
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    total_amount += qty * total_price
+                except (ValueError, TypeError):
+                    # Handle conversion errors if qty or total_price is not a valid number
+                    pass
         
         
             
@@ -1287,14 +1466,14 @@ def payment_completed_view(request):
             # Create CartOrderItems for each product in the cart
             
             # coupon check
-            applied_coupon = request.session.get('invoice_amt', None)
-            discount=request.session.get('discount', None)
+            # applied_coupon = request.session.get('invoice_amt', None)
+            # discount=request.session.get('discount', None)
 
-            if applied_coupon is not None:
-                # If a coupon is applied, use the stored cart_total_amount
-                cart_total_amount = applied_coupon
-                del request.session['invoice_amt']
-                del request.session['discount']
+            # if applied_coupon is not None:
+            #     # If a coupon is applied, use the stored cart_total_amount
+            #     cart_total_amount = applied_coupon
+            #     del request.session['invoice_amt']
+            #     del request.session['discount']
             
             
             # till here
@@ -1302,26 +1481,26 @@ def payment_completed_view(request):
             
             
             
-            else:
-                for p_id, item in cart_data.items():
-                    try:
-                        prices = [float(price) for price in item.get('price', '').split()]
-                        total_price = sum(prices)
-                        qty = int(item.get('qty', 0))
-                        cart_total_amount += qty * total_price
+            
+            for p_id, item in cart_data.items():
+                try:
+                    prices = [float(price) for price in item.get('price', '').split()]
+                    total_price = sum(prices)
+                    qty = int(item.get('qty', 0))
+                    cart_total_amount += qty * total_price
 
-                        # Create CartOrderItems for each product
-                        CartOrderItems.objects.create(
-                            order=order,
-                            invoice_no="INVOICE_NO-" + str(order.id),
-                            item=item['title'],
-                            image=item['image'],
-                            qty=qty,
-                            price=item['price'],
-                            total=qty * total_price
-                        )
-                    except (ValueError, TypeError):
-                        pass
+                    # Create CartOrderItems for each product
+                    CartOrderItems.objects.create(
+                        order=order,
+                        invoice_no="INVOICE_NO-" + str(order.id),
+                        item=item['title'],
+                        image=item['image'],
+                        qty=qty,
+                        price=item['price'],
+                        total=qty * total_price
+                    )
+                except (ValueError, TypeError):
+                    pass
         
             
         #till here
@@ -1356,7 +1535,7 @@ def payment_failed_view(request):
 @login_required
 def wishlist_view(request):
     
-    wishlist=wishlist_model.objects.all()
+    wishlist=wishlist_model.objects.filter(user=request.user)
     
     
     if not wishlist:

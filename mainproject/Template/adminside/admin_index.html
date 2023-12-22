@@ -71,12 +71,18 @@
     </div>
     <div class="row">
         <div class="col-xl-8 col-lg-12">
-            <div class="card mb-4">
+            <!-- <div class="card mb-4">
                 <article class="card-body">
-                    <h5 class="card-title">Sale statistics</h5>
-                    <canvas id="myChart" height="120px"></canvas>
+                   <p>{{month}}</p>
+                   <p>{{total_orders}}</p>
                 </article>
+            </div> -->
+
+            <div>
+                <canvas style="height: 50px;"  id="myChart"></canvas>
             </div>
+
+
             <!-- <div class="row">
                 <div class="col-lg-5">
                     <div class="card mb-4">
@@ -471,4 +477,39 @@
         </nav>
     </div>
 </section>
+
+
+<script>
+    const labels = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    ]
+    const data = {
+        labels: labels,
+        datasets: [{
+            label: 'My First dataset',
+            backgrooundColor: 'rgb(255,99,132)',
+            borderColor: 'rgb(59, 183, 126)',
+            data: [0,10,5,2,20,30,45],
+        }]
+    };
+
+    const config = {
+        type: 'line',
+        data: data,
+        options: {}
+    };
+
+    const myChart = new Chart(
+        document.getElementById('myChart'),
+        config
+    );
+</script>
+
+
+
 {% endblock %}

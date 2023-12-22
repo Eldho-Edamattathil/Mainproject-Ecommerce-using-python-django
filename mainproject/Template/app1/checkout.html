@@ -75,10 +75,10 @@
                         </div>
                         <form method="post">
                             <div class="form-group">
-                                <input type="text" required="" name="fname" placeholder="First name *" value="{{request.user.first_name|title}}">
+                                <input type="text" required="" name="fname" placeholder="First name *" value="{{active_address.user.username|title}}">
                             </div>
                             <div class="form-group">
-                                <input type="text" required="" name="lname" placeholder="Last name *" value="{{request.user.last_name|title}}">
+                                <input type="text" required="" name="lname" placeholder="Last name *" value="{{active_address.user.username|title}}">
                             </div>
                             
                             <div class="form-group">
