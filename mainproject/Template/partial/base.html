@@ -15,6 +15,19 @@
   <meta property="og:type" content="">
   <meta property="og:url" content="">
   <meta property="og:image" content="">
+
+  <!-- Bootstrap CSS (place this in the head of your document) -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<!-- Bootstrap JS (place these at the end of your document, just before the closing body tag) -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+  
+
+
+
   <!-- Favicon -->
   <link rel="shortcut icon" type="image/x-icon" href="assets/imgs/theme/favicon.svg">
   <!-- Template CSS -->
@@ -354,9 +367,9 @@
                               <li><a class="active" href="{% url 'app1:index'%}">Home</a>
                                   
                               </li>
-                              <li>
+                              <!-- <li>
                                   <a href="page-about.html">About</a>
-                              </li>
+                              </li> -->
                               <li><a href="blog-category-grid.html">Categories <i class="fi-rs-angle-down"></i></a>
                                 <ul class="sub-menu">
                                     {%for c in categories%}
@@ -383,9 +396,9 @@
                                       <li><a href="page-404.html">404 Page</a></li>
                                   </ul>
                               </li>
-                              <li>
+                              <!-- <li>
                                   <a href="page-contact.html">Contact</a>
-                              </li>
+                              </li> -->
                           </ul>
                       </nav>
                   </div>

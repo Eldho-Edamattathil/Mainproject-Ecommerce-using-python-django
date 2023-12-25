@@ -100,9 +100,59 @@
                                         <!-- if variants -->
                                         <div class="clearfix product-price-cover">
                                             <div class="product-price primary-color float-left">
-                                                <ins><span class="text-brand current-product-price-{{product.id}}">{{product.price}}</span></ins>
-                                                <ins><span class="old-price font-md ml-15">{{product.old_price}}</span></ins>
-                                                <span class="save-price  font-md color3 ml-15">-{{product.get_percentage|floatformat:0}}%</span>
+                                                <!-- <ins><span class="text-brand current-product-price-{{product.id}}">{{product.price}}</span></ins>
+                                                <ins><span class="old-price font-md ml-15">{{product.old_price}}</span></ins> -->
+                                                {% if discount_offer is not None and discount_offer.active %}
+                                                <div class="product-price">
+                                                   <span style="font-size: 30px; font-weight:bold" ><span class="current-product-price-{{product.id}} text-success" >{{product.price}}</span></span> 
+                                                    <br> <br>
+                                                    $<span class="old-price font-md ml-15" style="text-decoration: line-through;">{{product.old_price}}</span>
+                                                </div>
+                                                {% elif discounted_offer %}
+                                                {% for dis in discounted_offer %}
+                                                    {% if dis.active and dis.category == product.category %}
+                                                        <div class="product-price">
+                                                            <span style="font-size: 30px; font-weight:bold">$ <span class="current-product-price-{{product.id}} text-success">{{product.price}}</span></span>
+                                                            <br> <br>
+                                                            <span class="old-price font-md ml-15" style="text-decoration: line-through;">$ {{product.old_price}}</span>
+                                                        </div>
+                                                        {% else %}
+                                                        <div class="product-price">
+                                                            <span style="font-size: 30px; font-weight:bold">$ <span class="current-product-price-{{product.id}} text-success">{{product.price}}</span></span>
+                                                            
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div>
+                                                    <span style="font-size: 30px;">
+                                                        $<span class="current-product-price-{{product.id}} text-success" style="font-weight: bold;">{{product.price}}</span>
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                                <br>
+                                                <br>
+                                            {% if discount_offer is not None and discount_offer.active %}
+                                            <div class="product-badges product-badges-position product-badges-mrg">
+                                                <span class="hot" style="font-weight: bold;">-{{ discount_offer.discount_percentage|floatformat:0 }}% Offer</span>
+                                            </div>
+                                            {% elif discounted_offer %}
+                                            {% for dis in discounted_offer %}
+                                                {% if dis.active and dis.category == product.category %}
+                                                <div class="product-badges product-badges-position product-badges-mrg">
+                                                    <span class="hot" style="font-weight: bold;">-{{ dis.discount_percentage|floatformat:0 }}% Offer</span>
+                                                </div>
+                                                    {% else %}
+                                                    <div class="product-badges product-badges-position product-badges-mrg">
+                                                        <span class="hot" style="font-weight: bold;">Hot</span>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="product-badges product-badges-position product-badges-mrg">
+                                                <span class="hot">Hot</span>
+                                            </div>
+                                        {% endif %}
                                             </div>
                                         </div>
                                          {% endif %} 
@@ -465,9 +515,27 @@
                                                         <a aria-label="Add To Wishlist" class="action-btn small hover-up" href="shop-wishlist.html" tabindex="0"><i class="fi-rs-heart"></i></a>
                                                         <a aria-label="Compare" class="action-btn small hover-up" href="shop-compare.html" tabindex="0"><i class="fi-rs-shuffle"></i></a>
                                                     </div>
+                                                    {% if discount_offer is not None and discount_offer.active %}
+                                            <div class="product-badges product-badges-position product-badges-mrg">
+                                                <span class="hot" style="font-weight: bold;">-{{ discount_offer.discount_percentage|floatformat:0 }}% Offer</span>
+                                            </div>
+                                            {% elif discounted_offer %}
+                                            {% for dis in discounted_offer %}
+                                                {% if dis.active and dis.category == product.category %}
+                                                <div class="product-badges product-badges-position product-badges-mrg">
+                                                    <span class="hot" style="font-weight: bold;">-{{ dis.discount_percentage|floatformat:0 }}% </span>
+                                                </div>
+                                                    {% else %}
                                                     <div class="product-badges product-badges-position product-badges-mrg">
-                                                        <span class="hot">Hot</span>
+                                                        <span class="hot" style="font-weight: bold;">Hot</span>
                                                     </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="product-badges product-badges-position product-badges-mrg">
+                                                <span class="hot">Hot</span>
+                                            </div>
+                                        {% endif %}
                                                 </div>
                                                 <div class="product-content-wrap">
                                                     <h2><a href="{% url 'app1:product-detail' prod.pid%}" tabindex="0">{{prod.title}}</a></h2>
@@ -475,10 +543,34 @@
                                                         <span>
                                                         </span>
                                                     </div>
-                                                    <div class="product-price">
-                                                        <span>{{prod.price}} </span>
-                                                        <span class="old-price">{{prod.old_price}}</span>
-                                                    </div>
+                                                    {% if discount_offer is not None and discount_offer.active %}
+                                                <div class="product-price">
+                                                   <span style="font-size: 30px; font-weight:bold" ><span class="current-product-price-{{product.id}} text-success" >{{prod.price}}</span></span> 
+                                                    <br> <br>
+                                                    $<span class="old-price font-md ml-15" style="text-decoration: line-through;">{{prod.old_price}}</span>
+                                                </div>
+                                                {% elif discounted_offer %}
+                                                {% for dis in discounted_offer %}
+                                                    {% if dis.active and dis.category == product.category %}
+                                                        <div class="product-price">
+                                                            <span style="font-size: 20px; font-weight:bold">$ <span class="current-product-price-{{product.id}} text-success">{{prod.price}}</span></span>
+                                                            
+                                                            <span class="old-price font-md ml-15" style="text-decoration: line-through;">$ {{prod.old_price}}</span>
+                                                        </div>
+                                                        {% else %}
+                                                        <div class="product-price">
+                                                            <span style="font-size: 20px; font-weight:bold">$ <span class="current-product-price-{{product.id}} text-success">{{prod.price}}</span></span>
+                                                            
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div>
+                                                    <span style="font-size: 30px;">
+                                                        $<span class="current-product-price-{{product.id}} text-success" style="font-weight: bold;">{{prod.price}}</span>
+                                                    </span>
+                                                </div>
+                                            {% endif %}
                                                 </div>
                                             </div>
                                             

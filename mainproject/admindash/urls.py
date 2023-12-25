@@ -34,8 +34,31 @@ urlpatterns = [
     
     path('delete-coupon/<int:id>/',views.delete_coupon, name='delete-coupon'),
     
-    path('update-product-status/<int:id>/', views.update_product_status, name='update-product-status')
+    path('update-product-status/<int:id>/', views.update_product_status, name='update-product-status'),
     
+    # offers for product
+    
+    
+    path('product-offers/',views.product_offers, name='product-offers'),
+    
+    path('edit-product-offers/<int:id>',views.edit_product_offers, name='edit-product-offers'),
+     
+    path('create-product-offer/',views.create_product_offer, name='create-product-offer'),
+     
+    path('delete-product-offer/<int:id>/',views.delete_product_offer, name='delete-product-offer'),
+    
+    
+    # category offers
+    
+    path('category-offers/',views.category_offers, name='category-offers'),
+    
+    path('edit-category-offers/<int:id>',views.edit_category_offers, name='edit-category-offers'),
+    
+    path('create-category-offer/',views.create_category_offer, name='create-category-offer'),
+    
+    path('delete-category-offer/<int:id>/',views.delete_category_offer, name='delete-category-offer'),
+     
+     
     
     
     

@@ -1,6 +1,6 @@
 from django.db.models import Count,Avg
 from django.shortcuts import render,redirect
-from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model,wallet,ProductReview
+from app1.models import Product,ProductImages,Category,Variants,Size,Cart,CartItem,CartOrder,CartOrderItems,Address,UserDetails,Coupon,wishlist_model,wallet,ProductReview,ProductOffer,CategoryOffer
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
@@ -23,6 +23,8 @@ from django.contrib.auth.decorators import login_required
 from django.core import serializers
 from userauths.models import User
 from app1.forms import ProductReviewForm
+from django.http import Http404
+
 
 
 
@@ -30,21 +32,51 @@ from app1.forms import ProductReviewForm
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def index(request):
-    # if request.user.is_authenticated:
-    #     # Clear the OTP session if it exists
-    #     if 'otp' in request.session:
-    #         del request.session['otp']
+    # code = str(kwargs.get('ref_code'))
+    # if code:
+    #     code = str(code)
+    #     try:
+    #         profile = UserDetails.objects.get(code=code)
+    #         request.session['ref_profile'] = profile.id
+    #         print("id", profile.id)
+    #     except UserDetails.DoesNotExist:
+    #         pass
+    #     print(request.session.get_expiry_date())
+    
     blocked_categories =Category.objects.filter(is_blocked =True)
     products = Product.objects.filter(featured = True, status =True).exclude(category__in=blocked_categories)
     latest = Product.objects.filter(status=True).order_by("-id")[:10]
     categories =Category.objects.filter(is_blocked =False)
-   
-
+    try:
+        
+        discount_offer = ProductOffer.objects.get(active=True)
+    except ProductOffer.DoesNotExist:
+        discount_offer = None
+    if discount_offer:
+        current_date = timezone.now()
+        if current_date > discount_offer.end_date or current_date < discount_offer.start_date:
+            discount_offer.active = False
+            discount_offer.save()
     
+                        
+    try:
+        
+        discounted_offer = CategoryOffer.objects.filter(active=True)
+    except ProductOffer.DoesNotExist:
+        discounted_offer = None
+    if discounted_offer:
+        for dis in discounted_offer:
+            products_with_discount = Product.objects.filter(category=dis.category, status=True)
+            current_date = timezone.now()
+            if current_date > dis.end_date or current_date < dis.start_date:
+                dis.active = False
+                dis.save()
     context = {
         "products":products,
         "latest":latest,
-        "categories":categories
+        "categories":categories,
+        "discount_offer":discount_offer,
+        "discounted_offer":discounted_offer
     }
     return render(request, 'app1/index.html',context)
 
@@ -56,11 +88,31 @@ def product_list(request):
     p=Paginator(Product.objects.filter(status =True).exclude(category__in=blocked_categories),10)
     page=request.GET.get('page')
     productss=p.get_page(page)
+    try:
+        discount_offer = ProductOffer.objects.get(active=True)
+    except ProductOffer.DoesNotExist:
+        discount_offer = None
+        
+    try:
+        
+        discounted_offer = CategoryOffer.objects.filter(active=True)
+    except ProductOffer.DoesNotExist:
+        discounted_offer = None
+    if discounted_offer:
+        for dis in discounted_offer:
+            products_with_discount = Product.objects.filter(category=dis.category, status=True)
+            current_date = timezone.now()
+            if current_date > dis.end_date:
+                dis.active = False
+                dis.save()
+    
     
     context = {
         "products":products,
         "categories":categories,
-        "productss":productss
+        "productss":productss,
+        'discount_offer':discount_offer,
+        "discounted_offer":discounted_offer
     }
     
     return render(request,'app1/product_list.html', context)
@@ -82,10 +134,34 @@ def category_product_list(request, cid):
     category = Category.objects.get(cid=cid)
     product = Product.objects.filter(category=category,status =True)
     
+    try:
+        
+        discount_offer = ProductOffer.objects.get(active=True)
+    except ProductOffer.DoesNotExist:
+        discount_offer = None
+    
+    
+                        
+    try:
+        
+        discounted_offer = CategoryOffer.objects.filter(active=True)
+    except ProductOffer.DoesNotExist:
+        discounted_offer = None
+    if discounted_offer:
+        for dis in discounted_offer:
+            products_with_discount = Product.objects.filter(category=dis.category, status=True)
+            current_date = timezone.now()
+            if current_date > dis.end_date:
+                dis.active = False
+                dis.save()
+    
+    
     
     context ={
         "category":category,
-        "product":product
+        "product":product,
+        "discount_offer":discount_offer,
+        "discounted_offer":discounted_offer
     }
     
     return render(request,'app1/category_product_list.html', context)
@@ -122,6 +198,26 @@ def product_detail(request, pid):
     variants = Variants.objects.filter(product=product)
     review=ProductReview.objects.filter(product=product).order_by("-date")
     average_rating =ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
+    try:
+        
+        discount_offer = ProductOffer.objects.get(active=True)
+    except ProductOffer.DoesNotExist:
+        discount_offer = None
+    
+    
+                        
+    try:
+        
+        discounted_offer = CategoryOffer.objects.filter(active=True)
+    except ProductOffer.DoesNotExist:
+        discounted_offer = None
+    if discounted_offer:
+        for dis in discounted_offer:
+            products_with_discount = Product.objects.filter(category=dis.category, status=True)
+            current_date = timezone.now()
+            if current_date > dis.end_date:
+                dis.active = False
+                dis.save()
     
     
     review_form=ProductReviewForm()
@@ -136,7 +232,10 @@ def product_detail(request, pid):
         "sizes": sizes,
         'review':review,
         'average_rating':average_rating,
-        "variants": variants  # Pass variants to the template
+        "variants": variants,
+        "discount_offer":discount_offer,
+        "discounted_offer":discounted_offer
+        
     }
 
     return render(request, 'app1/product_detail.html', context)
@@ -313,34 +412,7 @@ def filter_product(request):
 
 
     
-# view for variants
-# def get_variant_details(request,product_id,variant_size):
-#     if request.method == 'GET':
-#         product_id = request.GET.get('product_id')
-#         variant_value = request.GET.get('variant')
 
-#         try:
-#             # Fetch variant-specific details from the database
-#             product = get_object_or_404(Product, pk=product_id)
-#             variant = Variants.objects.get(product=product, size=variant_value)  # Assuming size is the field in Variants model corresponding to the selected size
-
-#             # Customize the response data based on your model fields
-#             variant_details = {
-#                 'price': str(variant.price),  # Convert to string if needed
-#                 'stock_count': variant.stock_count,
-#                 # Add other details as needed
-#             }
-
-#             return JsonResponse(variant_details)
-
-#         except Product.DoesNotExist:
-#             return JsonResponse({'error': 'Product not found'})
-
-#         except Variants.DoesNotExist:
-#             return JsonResponse({'error': 'Variant not found'})
-
-#     return JsonResponse({'error': 'Invalid request method'})
-    
     
     
         
@@ -364,11 +436,7 @@ def add_to_cart(request):
     }
     
     
-    # title=request.GET['title']
-    # qty=request.GET['qty']
-    # products=Product.object.filter(title=title)
-    # if products.stock_count < qty:
-    #     messages.error(request, f'Only {products.stock_count} are avaiable')
+    
         
     
     
@@ -397,87 +465,8 @@ def add_to_cart(request):
         'already_in_cart': False
     })
 
-# db add tot cart latest
-
-# so far the latest
-# def add_to_cart(request):
-#     product_id = request.GET.get('id')
-#     quantity = int(request.GET.get('qty', 1))
-
-#     product = get_object_or_404(Product, id=product_id)
-
-#     # Check if the user has an active cart in the session
-#     if 'cart_data_obj' not in request.session:
-#         request.session['cart_data_obj'] = {}
-
-#     cart_data = request.session['cart_data_obj']
-
-#     # Check if the product is already in the cart
-#     if product_id in cart_data:
-#         cart_data[product_id]['qty'] += quantity
-#     else:
-#         # Add the product to the cart
-#         cart_data[product_id] = {
-#             'title': product.title,
-#             'qty': quantity,
-#             'price': str(product.price),
-#             'pid': str(product.pid),
-#             'image': str(product.image),
-#         }
-
-#     # Update the session with the modified cart data
-#     request.session['cart_data_obj'] = cart_data
-
-#     # Save the product to the database (you can customize this part based on your models)
-#     if request.user.is_authenticated:
-#         user_cart, created = Cart.objects.get_or_create(user=request.user)
-#         product_instance, _ = CartItem.objects.get_or_create(cart=user_cart, product=product)
-#         product_instance.quantity += quantity
-#         product_instance.total_price = float(product.price) * product_instance.quantity
-#         product_instance.save()
-
-#     total_cart_items = len(request.session['cart_data_obj'])
-#     response_data = {
-#         "data": request.session['cart_data_obj'],
-#         "totalcartitems": total_cart_items,
-#         "already_in_cart": False,
-#     }
-
-#     return JsonResponse(response_data)
 
 
-
-# def add_to_cart(request):
-    
-    
-    
-    
-#     cart_product = {
-#         str(request.GET['id']): {
-#             'title': request.GET['title'],
-#             'qty': request.GET['qty'],
-#             'price': request.GET['price'],
-#             'pid': request.GET['pid'],
-#             'image': request.GET['image'],
-#         }
-#     }
-
-#     if 'cart_data_obj' in request.session:
-#         if str(request.GET['id']) in request.session['cart_data_obj']:
-#             cart_data = request.session['cart_data_obj']
-#             cart_data[str(request.GET['id'])]['qty'] = int(cart_product[str(request.GET['id'])]['qty'])
-#             cart_data.update(cart_product)
-#             request.session['cart_data_obj'] = cart_data
-#         else:
-#             cart_data = request.session['cart_data_obj']
-#             cart_data.update(cart_product)
-#             request.session['cart_data_obj'] = cart_data
-#     else:
-#         request.session['cart_data_obj'] = cart_product
-        
-    
-
-#     return JsonResponse({"data": request.session['cart_data_obj'], 'totalcartitems': len(request.session['cart_data_obj'])})
 
 
 
@@ -498,6 +487,8 @@ def cart_view(request):
     final_money=0
     money=0
     print(request.session.items())
+    current_date = timezone.now().date()
+    available_coupons = Coupon.objects.filter(active=True, active_date__lte=current_date, expiry_date__gte=current_date)
     
     
        
@@ -526,14 +517,7 @@ def cart_view(request):
                 # Handle conversion errors if qty or total_price is not a valid number
                 pass
             
-            # title=item.get('title',0)
-            # products=Product.objects.filter(title=title)
-            # print(products)
-            # for p in products:
-            #     stock_count = int(p.stock_count)
-
-            #     if stock_count < qty:
-            #         messages.error(request, f'Only {p.stock_count} are avaiable')
+           
             
             
         # Coupon
@@ -576,7 +560,8 @@ def cart_view(request):
             'money':money,
             'totalcartitems': len(cart_data),
             'cart_total_amount': cart_total_amount,
-            'coupon_form': coupon_form,  # Pass the coupon form to the template
+            'coupon_form': coupon_form, 
+            'available_coupons':available_coupons 
         })
     
     print("hello123")
@@ -877,52 +862,7 @@ def update_from_cart(request):
 
 
 
-# def checkout_view(request):
-#     cart_total_amount=0
-#     total_amount =0
-    
-#     if 'cart_data_obj' in request.session:
-#         for p_id, item in cart_data.items():
-#             try:
-#                 # Split the price string into individual prices and convert to float
-#                 prices = [float(price) for price in item.get('price', '').split()]
-#                 # Sum up the individual prices
-#                 total_price = sum(prices)
-#                 qty = int(item.get('qty', 0))
-#                 total_amount += qty * total_price
-#             except (ValueError, TypeError):
-#                 # Handle conversion errors if qty or total_price is not a valid number
-#                 pass
-#             order =CartOrder.objects.create(
-#                 user=request.user,
-#                 price=total_amount
-#             )
-        
-        
-#         for p_id, item in cart_data.items():
-#             try:
-#                 # Split the price string into individual prices and convert to float
-#                 prices = [float(price) for price in item.get('price', '').split()]
-#                 # Sum up the individual prices
-#                 total_price = sum(prices)
-#                 qty = int(item.get('qty', 0))
-#                 cart_total_amount += qty * total_price
-#             except (ValueError, TypeError):
-#                 # Handle conversion errors if qty or total_price is not a valid number
-#                 pass
-            
-            
-#             cart_order_products =CartOrderItems.objects.create(
-#                 order =order,
-#                 invoice_no ="INVOICE_NO-" + str(order.id),
-#                 item = item['title'],
-#                 image=item['image'],
-#                 qty=item['qty'],
-#                 price=item['price'],
-#                 total = cart_total_amount      
-#                 # might need to change
-#             )
-    
+
     
    
    
@@ -995,26 +935,7 @@ def checkout_view(request):
 
 
 
-# till here  
 
-            # Create CartOrderItems for each product in the cart
-            # for p_id, item in cart_data.items():
-            #     try:
-            #         prices = [float(price) for price in item.get('price', '').split()]
-            #         total_price = sum(prices)
-            #         qty = int(item.get('qty', 0))
-            #         cart_total_amount += qty * total_price
-
-                   
-            #     except (ValueError, TypeError):
-            #         pass
-            
-        # Clear the cart data from the session after processing the order
-        # try:
-        #     active_address= Address.objects.get(user=request.user, status =True)
-        # except:
-        #     messages.warning(request,"There are multiple. Only one should be activated")
-        #     active_address=None
         
         try:
             active_address = Address.objects.get(user=request.user, status=True)
@@ -1022,7 +943,7 @@ def checkout_view(request):
             messages.warning(request, "Please select an address before proceeding.")
             return redirect('app1:dashboard')  # Redirect to the address selection page
 
-        # del request.session['cart_data_obj']
+       
 
         
         
@@ -1109,11 +1030,7 @@ def customer_dashboard(request):
     
         
     orders=CartOrder.objects.filter(user=request.user).order_by("-id")
-    # for o in orders:
-    #     if o.product_status == 'cancelled':
-    #         wallet_orders=CartOrder.objects.filter(user=request.user,wallet_status=True).order_by('-id')
-    #     else:
-    #         wallet_orders=CartOrder.objects.filter(user=request.user,wallet_status=True).order_by('-id')
+    
     
     wallet_debits = []
     wallet_credits = []
@@ -1384,7 +1301,9 @@ def wallet_order_place(request):
     
                 
     
-    del request.session['cart_data_obj']
+        del request.session['cart_data_obj']
+    else:
+        return redirect("app1:index")
     
         
    
@@ -1505,6 +1424,8 @@ def payment_completed_view(request):
             
         #till here
         del request.session['cart_data_obj']
+    else:
+        return redirect('app1:index')
             
         
         
@@ -1604,5 +1525,10 @@ def remove_wishlist(request):
     
     
     return JsonResponse({"data":data,"w":wishlist_json})
+
+
+
+
+
 
 

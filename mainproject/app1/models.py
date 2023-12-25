@@ -2,6 +2,8 @@ from django.db import models
 from shortuuidfield import ShortUUIDField
 from django.conf import settings
 from django.shortcuts import reverse
+from decimal import Decimal
+from .utils import generate_ref_code
 
 
 from django.utils.html import mark_safe
@@ -245,9 +247,22 @@ class UserDetails(models.Model):
   bio = models.CharField(max_length=200, null=True, blank=True)
   phone =models.CharField(max_length=15, null=True,blank=True)
   verified =models.BooleanField(default=False)
+  code=models.CharField(max_length=12, blank=True, null=True)
+  recommended_by=models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null =True,related_name='recommended_userdetails')
+  updated=models.DateTimeField(auto_now=True)
+  created=models.DateTimeField(auto_now=True)
   
   def __str__(self):
-      return self.full_name
+      return f"{self.user.username}---{self.code}"
+    
+  def get_recommend_profiles(self):
+    pass
+  
+  def save(self, *args, **kwargs):
+        if self.code is None:
+            self.code = generate_ref_code()
+
+        super().save(*args, **kwargs)
   
   
     
@@ -306,3 +321,37 @@ class ProductReview(models.Model):
   
   def get_rating(self):
     return self.rating
+  
+  
+class ProductOffer(models.Model):
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    active = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.discount_percentage}% Discount"
+
+    def save(self, *args, **kwargs):
+        # Ensure discount_percentage is Decimal type
+        if not isinstance(self.discount_percentage, Decimal):
+            self.discount_percentage = Decimal(str(self.discount_percentage))
+        super().save(*args, **kwargs)
+    
+class CategoryOffer(models.Model):
+    category=models.ForeignKey(Category,on_delete=models.SET_NULL, null=True)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    active = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.discount_percentage}% Discount"
+
+    def save(self, *args, **kwargs):
+        # Ensure discount_percentage is Decimal type
+        if not isinstance(self.discount_percentage, Decimal):
+            self.discount_percentage = Decimal(str(self.discount_percentage))
+        super().save(*args, **kwargs)
+        
+        

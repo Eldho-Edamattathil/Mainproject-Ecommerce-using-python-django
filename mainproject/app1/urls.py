@@ -6,7 +6,8 @@ from app1.views import index
 
 app_name = "app1"
 urlpatterns = [
-  path('', views.index, name ='index'),
+  # path('<str:ref_code>/', views.index, name='index'),
+  path('', views.index, name='index'),
   path('products/', views.product_list, name = 'product-list'),
    path('product/<pid>/', views.product_detail, name = 'product-detail'),
   

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.conf import settings
 # Register your models here.
 from django.contrib.auth import get_user_model
-from app1.models import Product, Category, ProductImages,Size,Variants,CartOrderItems,CartOrder,Address,UserDetails,Coupon,wishlist_model,wallet,ProductReview
+from app1.models import Product, Category, ProductImages,Size,Variants,CartOrderItems,CartOrder,Address,UserDetails,Coupon,wishlist_model,wallet,ProductReview,ProductOffer,CategoryOffer
 # from userauths.models import profile
 
 
@@ -73,6 +73,8 @@ admin.site.register(Coupon,CouponAdmin)
 admin.site.register(wishlist_model,WishlistAdmin)
 admin.site.register(wallet,walletAdmin)
 admin.site.register(ProductReview)
+admin.site.register(ProductOffer)
+admin.site.register(CategoryOffer)
 
 
 

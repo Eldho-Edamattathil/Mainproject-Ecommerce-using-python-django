@@ -97,7 +97,7 @@
                     <div class="col-md-6">
                         <div class="order_review">
                             <div class="mb-20">
-                                <a href="{% url 'app1:cart' %}" class="btn btn-fill-out btn-block mt-30 mb-40">Go back to Cart</a>
+                                <a href="{% url 'app1:cart' %}" class="btn btn-fill-out btn-block mt-30 mb-40" style="width: auto;">Go back to Cart</a>
                             </div>
                             <div class="table-responsive order_table text-center">
                                 <table class="table">
@@ -115,7 +115,7 @@
                                             <td>
                                                 <h5><a href="{% url 'app1:product-detail' item.pid  %}">{{item.title}}</a></h5> <span class="product-qty text-muted">x{{item.qty}}</span>
                                             </td>
-                                            <td class="text-muted">{{item.price}}</td>
+                                            <td class="text-muted">{{item.price|floatformat:0}}</td>
                                             <td class="text-brand">{% widthratio item.price 1 item.qty %}</td>
                                         </tr>
                                         {% endfor %}
@@ -146,9 +146,9 @@
                                     <h3>Payment Options</h3>
 
                                     <div>
-                                        <a href="{% url 'app1:place-order'  %}" class="btn btn-fill-out btn-block mt-30">Cash On Delivery</a>
+                                        <a href="{% url 'app1:place-order'  %}" class="btn btn-fill-out btn-block mt-30" style="width: auto;">Cash On Delivery</a>
                                         <br>
-                                        <a href="{%  url 'app1:wallet-order-place'  %}" class="btn btn-fill-out btn-block mt-30">Pay using wallet</a>
+                                        <a href="{%  url 'app1:wallet-order-place'  %}" class="btn btn-fill-out btn-block mt-30" style="width: auto;">Pay using wallet</a>
                                         <br><br>
                                         <div class="w-50 h-70">
                                             {{paypal_payment_button.render}}

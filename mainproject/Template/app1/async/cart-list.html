@@ -103,10 +103,32 @@
                       <!-- <a class="btn  mr-10 mb-sm-15"><i class="fi-rs-shuffle mr-10"></i>Update Cart</a> -->
                       <a class="btn "><i class="fi-rs-shopping-bag mr-10"></i>Continue Shopping</a>
                   </div>
+                  <!-- available coupon -->
+
+                  
                   <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
                   <div class="row mb-50">
                       <div class="col-lg-6 col-md-12">
-                          
+
+                        <div class="mb-30 mt-50">
+                            <div class="heading_s1 mb-3">
+                                <h4>Available Coupons</h4>
+                            </div>
+                            <div class="row">
+                                {% for coupon in available_coupons %}
+                                    <div class="col-lg-4 mb-3">
+                                        <div class="card border-primary">
+                                            <div class="card-body">
+                                                <h5 class="card-title coupon-code">{{ coupon.code }}</h5>
+                                                <p class="card-text">Discount: {{ coupon.discount }}%</p>
+                                                <p class="card-text">Expires: {{ coupon.expiry_date }}</p>
+                                                <button class="btn btn-primary copy-coupon-button">Copy</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                           <div class="mb-30 mt-50">
                               <div class="heading_s1 mb-3">
                                   <h4>Apply Coupon</h4>
@@ -140,7 +162,7 @@
                                       <tbody>
                                           <tr>
                                               <td class="cart_total_label">Cart Subtotal</td>
-                                              <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">{{cart_total_amount|floatformat:2}}</span></td>
+                                              <td class="cart_total_amount"><span class="font-lg fw-900 text-brand">{{cart_total_amount|floatformat:0}}</span></td>
                                           </tr>
                                           <tr>
                                               <td class="cart_total_label">Shipping</td>
@@ -148,7 +170,7 @@
                                           </tr>
                                           <tr>
                                               <td class="cart_total_label">Total</td>
-                                              <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand">${{cart_total_amount|floatformat:2}}</span></strong></td>
+                                              <td class="cart_total_amount"><strong><span class="font-xl fw-900 text-brand">${{cart_total_amount|floatformat:0}}</span></strong></td>
                                           </tr>
                                       </tbody>
                                   </table>

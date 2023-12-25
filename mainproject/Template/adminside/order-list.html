@@ -51,7 +51,7 @@
                                                                 <td><div class="d-flex">
                                                                     <div>
                                                                     <form method="post" action="{% url 'admindash:update-product-status' o.id  %}">
-                                                                        {% csrf_token %}
+                                                                    {% csrf_token %}
                                                                         
                                                                  <!-- {{o.product_status}} -->
                                                                  <select name="product_status" id="product_status" {% if o.product_status == 'cancelled' %}disabled{% endif %}>

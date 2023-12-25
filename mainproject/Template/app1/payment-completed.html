@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+ 
+  <!-- Add this script tag in the head of your HTML file -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.js"></script>
+
+
+  
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
   <link rel='stylesheet' href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css'>
   <style>
@@ -82,8 +89,8 @@
     <div class="invoice-header">
       <div class="row">
         <div class="col-xs-8">
-          <h1>Invoice <small>With Credit</small></h1>
-          <h4 class="text-muted">NO: 554775/R1 | Date: 01/01/2015</h4>
+          <h1 class="text-danger">Invoice <small>With Credit</small></h1>
+          <h4 class="text-muted">NO: 554775/R1 | Date: 27/12/2023</h4>
         </div>
         <div class="col-xs-4">
           <div class="media">
@@ -108,20 +115,12 @@
             </div>
             <div class="panel-body">
               <dl class="dl-horizontal">
-                <dt>Name</dt>
+                <!-- <dt>Name</dt> -->
                 <dd><strong>Autoparts</strong></dd>
-                <dt>Industry</dt>
-                <dd>Automobile</dd>
+                <!-- <dt>Industry</dt> -->
+                <dd><strong>Automobile</strong></dd>
                 <p>Get your gear today!!!</p>
-                <!-- <dd>Field 3, Moon</dd>
-                <dt>Phone</dt>
-                <dd>123.4456.4567</dd>
-                <dt>Email</dt>
-                <dd>mainl@acme.com</dd>
-                <dt>Tax NO</dt>
-                <dd class="mono">123456789</dd>
-                <dt>Tax Office</dt>
-                <dd>A' Moon</dd> -->
+                
             </div>
           </div>
         </div>
@@ -184,9 +183,7 @@
               {% if discount   %}
               <td class="text-center col-xs-1">Coupon Discount</td>
               {% endif  %}
-              <!-- <td class="text-center col-xs-1">Discount</td>
-              <td class="text-center col-xs-1">Total</td>
-              <td class="text-center col-xs-1">Tax</td> -->
+             
               <td class="text-center col-xs-1">Grand Total</td>
             </tr>
           </thead>
@@ -194,15 +191,13 @@
             <tr>
               
               
-              <th class="text-center rowtotal mono">${{cart_total_amount}}</th>
+              <th class="text-center rowtotal mono">${{cart_total_amount|floatformat:0}}</th>
               
               {% if discount   %}
-              <th class="text-center rowtotal mono">-${{discount}}</th>
+              <th class="text-center rowtotal mono">-${{discount|floatformat:0}}</th>
               {% endif  %}
-              <!-- <th class="text-center rowtotal mono">-$1,800.00</th>
-              <th class="text-center rowtotal mono">$16,440.00</th>
-              <th class="text-center rowtotal mono">$3,312.00</th> -->
-              <th class="text-center rowtotal mono">${{total_amount}}</th>
+             
+              <th class="text-center rowtotal mono">${{total_amount|floatformat:0}}</th>
             </tr>
           </tbody>
         </table>
@@ -232,7 +227,15 @@
           </div>
         </div>
       </div>
-  
+      <button onclick="downloadPDF()" style="color: rgb(255, 255, 255);"class="btn btn-danger">Download PDF</button>
+      <script>
+        function downloadPDF() {
+          const element = document.querySelector('.invoice');
+    
+          // Use html2pdf to generate the PDF from the HTML content
+          html2pdf(element);
+        }
+      </script>
     </div>
     <div class="invoice-footer">
       Hey {{request.user.first_name}},Thanks for shopping with us....!!!
@@ -240,5 +243,6 @@
       <strong>~ACME~</strong>
     </div>
   </div>
+ 
 </body>
 </html>
