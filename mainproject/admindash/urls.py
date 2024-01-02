@@ -57,6 +57,8 @@ urlpatterns = [
     path('create-category-offer/',views.create_category_offer, name='create-category-offer'),
     
     path('delete-category-offer/<int:id>/',views.delete_category_offer, name='delete-category-offer'),
+    
+    path('sales_report',views.sales_report,name='sales_report')
      
      
     

@@ -51,6 +51,7 @@ urlpatterns = [
   
   # make default address
   
+  path('delete-address/<int:id>/', views.delete_address, name="delete-address"),
   
   path('make-default-address/', views.make_address_default,name= 'make-default-address'),
   
@@ -88,6 +89,13 @@ urlpatterns = [
   
   # remove from wishlist
   
-  path("remove-from-wishlist", views.remove_wishlist, name="remove-from-wishlist")
+  path("remove-from-wishlist", views.remove_wishlist, name="remove-from-wishlist"),
+  
+  
+  path("referral-coupon/",views.referral_coupon, name="referral-coupon"),
+  
+  path("about-us/",views.about_us, name="about-us"),
+   
+  path("contact/",views.contact, name="contact")
   
 ]

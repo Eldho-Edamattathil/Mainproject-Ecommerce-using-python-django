@@ -52,25 +52,45 @@ def send_otp(request):
     send_mail("otp for sign up",s,'djangoalerts0011@gmail.com',[request.session['email']],fail_silently=False)
     return render(request,"userauths/otp.html")
 
-@never_cache
-def  otp_verification(request):
-    if  request.method=='POST':
+
+# def  otp_verification(request):
+#     if  request.method=='POST':
        
-        otp_=request.POST.get("otp")
-    if otp_ == request.session["otp"]:
-        encryptedpassword=make_password(request.session['password'])
-        nameuser=User(username=request.session['username'],email=request.session['email'],password=encryptedpassword)
-        nameuser.save()
-        messages.info(request,'signed in successfully...')
-        User.is_active=True
-       
-        return redirect('app1:index')
-    else:
-        messages.error(request,"otp doesn't match")
-        return render(request,'userauths/otp.html')
+#         otp_=request.POST.get("otp")
+#     if otp_ == request.session["otp"]:
+#         encryptedpassword=make_password(request.session['password'])
+#         nameuser=User(username=request.session['username'],email=request.session['email'],password=encryptedpassword)
+#         messages.info(request, 'Signed in successfully...')
+#         nameuser.is_active=True
+#         User.is_active=True
+#         nameuser.save()
+        
+        
+#     else:
+#         messages.error(request,"otp doesn't match")
+#         return render(request,'userauths/otp.html')
     
     
-    
+def otp_verification(request):
+    if request.method == 'POST':
+        otp_ = request.POST.get("otp")
+
+        if otp_ == request.session["otp"]:
+            encrypted_password = make_password(request.session['password'])
+            nameuser = User(username=request.session['username'], email=request.session['email'], password=encrypted_password)
+            nameuser.is_active = True
+            nameuser.save()
+
+            
+            login(request, nameuser, backend='django.contrib.auth.backends.ModelBackend')
+
+            messages.success(request, 'Account activation successful. You are now logged in.')
+            
+            return redirect('app1:index')  
+        else:
+            messages.error(request, "OTP doesn't match.")
+
+    return render(request, 'userauths/otp.html')   
     
     
     
@@ -135,11 +155,12 @@ def login_otp(request):
             return redirect('userauths:login_otp') 
         try:
           user = User.objects.get(email=email)
-        #   user = authenticate(email=email)
+          
         
 
           if user is not None:
             send_otp_login(request)
+            
             return render(request,'userauths/otp_login.html',{"email":email})
         #   
         except:
@@ -200,24 +221,31 @@ def otp_verification_login(request):
         otp_ = request.POST.get("otp")
         try:
             if otp_ == request.session["otp"]:
-                # Clear the 'otp' session key after successful verification
+               
                 request.session.pop('otp', None)
 
-                # Retrieve the user instance from the database
+               
                 user = User.objects.get(email=request.session.get("email"))
 
-                # Set the user as active
+                
                 user.is_active = True
                 
                 user.save()
-                
+                login(request, user,backend='django.contrib.auth.backends.ModelBackend')
 
                 messages.success(request, 'Account activated successfully.')
                 redirect_url = reverse('app1:index')
-                return HttpResponseRedirect(redirect_url)  # Replace '/app1/index' with your actual URL
+                return HttpResponseRedirect(redirect_url) 
             else:
-                messages.error(request, "OTP doesn't match")
-                return render(request, 'userauths/otp_login.html')
+                messages.error(request, "OTP doesn't match.")
+                
+
+            #     messages.success(request, 'Account activated successfully.')
+            #     redirect_url = reverse('app1:index')
+            #     return HttpResponseRedirect(redirect_url)  # Replace '/app1/index' with your actual URL
+            # else:
+            #     messages.error(request, "OTP doesn't match")
+            #     return render(request, 'userauths/otp_login.html')
         except KeyError:
             messages.error(request, 'Session expired. Please try logging in again.')
 

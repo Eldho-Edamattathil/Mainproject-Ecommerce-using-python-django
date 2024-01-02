@@ -11,7 +11,7 @@
             <p>Whole data about your business here</p>
         </div>
         <div>
-            <a href="" class="btn btn-primary"><i class="text-muted material-icons md-post_add"></i>Create report</a>
+            <a href="{% url 'admindash:sales_report' %}" class="btn btn-primary"><i class="text-muted material-icons md-post_add"></i>Create report</a>
         </div>
     </div>
     <div class="row">
@@ -111,14 +111,14 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <!-- <div class="col-md-4">
                 <div class="card">
                     <article class="card-body">
                         <h5 class="card-title">Order Report</h5>
                         <canvas id="orderStatusChart"></canvas>
                     </article>
                 </div>
-            </div>
+            </div> -->
         </div>
         
     </div>
@@ -196,7 +196,7 @@
   const ctx = document.getElementById('myChart');
 
   new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
     labels: date,
     datasets: [{
@@ -224,7 +224,7 @@
   const mctx = document.getElementById('monthlyChart');
 
   new Chart(mctx, {
-    type: 'line',
+    type: 'bar',
     data: {
     labels: monthlydates,
     datasets: [{
@@ -253,7 +253,7 @@
   const yctx = document.getElementById('yearlyChart');
 
   new Chart(yctx, {
-    type: 'line',
+    type: 'bar',
     data: {
     labels: yearlydates,
     datasets: [{
@@ -274,13 +274,13 @@
 
 
 <script>
-    const statuses  = {{ status_list|safe }};
-    const orderCounts = {{ count_list|safe }};
+    const statuses  = {{ stat|safe}};
+    const orderCounts = {{ order_counts|safe}};
 
     const pctx = document.getElementById('orderStatusChart').getContext('2d');
 
     new Chart(pctx, {
-        type: 'pie',
+        type: 'bar',
         data: {
             labels: statuses,
             datasets: [{
@@ -298,7 +298,7 @@
             }]
         },
         options: {
-            // Additional options here
+           
         }
     });
 </script>

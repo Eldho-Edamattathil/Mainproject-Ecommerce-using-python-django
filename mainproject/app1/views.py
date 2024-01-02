@@ -24,6 +24,7 @@ from django.core import serializers
 from userauths.models import User
 from app1.forms import ProductReviewForm
 from django.http import Http404
+from django.core.exceptions import ValidationError
 
 
 
@@ -32,16 +33,7 @@ from django.http import Http404
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def index(request):
-    # code = str(kwargs.get('ref_code'))
-    # if code:
-    #     code = str(code)
-    #     try:
-    #         profile = UserDetails.objects.get(code=code)
-    #         request.session['ref_profile'] = profile.id
-    #         print("id", profile.id)
-    #     except UserDetails.DoesNotExist:
-    #         pass
-    #     print(request.session.get_expiry_date())
+    
     
     blocked_categories =Category.objects.filter(is_blocked =True)
     products = Product.objects.filter(featured = True, status =True).exclude(category__in=blocked_categories)
@@ -167,27 +159,6 @@ def category_product_list(request, cid):
     return render(request,'app1/category_product_list.html', context)
 
 
-# def product_detail(request,pid):
-#     product = Product.objects.get(pid = pid)
-#     p_image =product.p_images.all()
-#     category = Category.objects.all()
-#     products = Product.objects.filter(category=product.category).exclude(pid=pid)[:4]
-#     sizes = Size.objects.all()
-    
-#     context={
-#         "product":product,
-#         "p_image":p_image,
-#         "category":category,
-#         "products":products,
-#         "sizes": sizes 
-        
-        
-        
-#     }
-    
-    
-    
-#     return render (request,'app1/product_detail.html',context)
 
 def product_detail(request, pid):
     product = get_object_or_404(Product, pid=pid)
@@ -221,6 +192,17 @@ def product_detail(request, pid):
     
     
     review_form=ProductReviewForm()
+    if request.user.is_authenticated:
+        
+        has_purchased = CartOrderItems.objects.filter(
+            order__user=request.user,
+            item=product.title,
+        ).exists()
+    else:
+       
+        has_purchased = False
+    
+    
     
 
     context = {
@@ -234,7 +216,8 @@ def product_detail(request, pid):
         'average_rating':average_rating,
         "variants": variants,
         "discount_offer":discount_offer,
-        "discounted_offer":discounted_offer
+        "discounted_offer":discounted_offer,
+        "has_purchased":has_purchased
         
     }
 
@@ -242,76 +225,7 @@ def product_detail(request, pid):
 
 # Review View
 
-# def add_ajax_review(request,pid):
-#     product=Product.objects.get(pk=pid)
-#     user=request.user
-    
-#     review = ProductReview.objects.create(
-#         user=user,
-#         product=product,
-#         review=request.POST['review'],
-#         rating=request.POST['rating'],
-#     )
-    
-#     context={
-#         "user":user.username,
-#         "review":request.POST['review'],
-#         "rating":request.POST['rating']
-        
-        
-        
-#     }
-    
-#     average_reviews=ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
-    
-    
-#     return JsonResponse(
-#         {
-        
-#         'bool':True,
-#         'context':context,
-#         'average_reviews':average_reviews
-#         }
-    
-#         )
 
-# def add_ajax_review(request, pid):
-#     if request.method == 'POST':
-#         try:
-#             product = Product.objects.get(pk=pid)
-#             user = request.user
-#             review_text = request.POST.get('review', '')
-#             rating = float(request.POST.get('rating', 0))
-
-#             # Create a new ProductReview
-#             review = ProductReview.objects.create(
-#                 user=user,
-#                 product=product,
-#                 review=review_text,
-#                 rating=rating,
-#             )
-
-#             # Calculate average rating for the product
-#             average_reviews = ProductReview.objects.filter(product=product).aggregate(avg_rating=Avg("rating"))
-
-#             context = {
-#                 "user": user.username,
-#                 "review": review_text,
-#                 "rating": rating,
-#             }
-            
-            
-
-#             return JsonResponse({
-#                 'success': True,
-#                 'context': context,
-#                 'average_reviews': average_reviews['avg_rating'] if average_reviews['avg_rating'] else 0,
-#             })
-
-#         except Product.DoesNotExist:
-#             return JsonResponse({'success': False, 'error': 'Product does not exist'})
-
-#     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 def add_ajax_review(request, pid):
     if not request.user.is_authenticated:
@@ -349,6 +263,7 @@ def add_ajax_review(request, pid):
             # "image":image.image,
             "review": request.POST['review'],
             "rating": request.POST['rating'],
+            "has_purchased":has_purchased
         }
 
         average_reviews = ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
@@ -446,14 +361,14 @@ def add_to_cart(request):
         cart_data = request.session['cart_data_obj']
 
         if product_id in cart_data:
-            # Product already exists in the cart
+            
             return JsonResponse({
                 "message": "Product already in the cart",
                 'totalcartitems': len(cart_data),
                 'already_in_cart': True
             })
         else:
-            # Product is not in the cart, add it
+            
             cart_data.update(cart_product)
             request.session['cart_data_obj'] = cart_data
     else:
@@ -481,7 +396,8 @@ def add_to_cart(request):
 # existing cart view
 
 # modified
-
+@never_cache
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def cart_view(request):
     cart_total_amount = 0
     final_money=0
@@ -504,40 +420,52 @@ def cart_view(request):
 
         for p_id, item in cart_data.items():
             try:
-                # Split the price string into individual prices and convert to float
+               
                 prices = [float(price) for price in item.get('price', '').split()]
                 print(prices)
                 
-                # Sum up the individual prices
+               
                 total_price = sum(prices)
                 print(total_price)
                 qty = int(item.get('qty', 0))
+                print(qty)
                 cart_total_amount += qty * total_price
+                
+                        
+                
             except (ValueError, TypeError):
-                # Handle conversion errors if qty or total_price is not a valid number
+               
                 pass
             
-           
+    
+        if cart_data =={}:
+            messages.warning(request,'Nothing in cart')
+            return redirect('app1:index')
             
+        
             
         # Coupon
         if request.method == 'POST':
-            coupon_form = CouponForm(request.POST)  # Instantiate the coupon form with the POST data
+            coupon_form = CouponForm(request.POST)  
 
             if coupon_form.is_valid():
                 coupon_code = coupon_form.cleaned_data['code']
                 print(coupon_code)
                 
                 try:
-                    # Assuming you have a Coupon model
+                    
                     coupon = Coupon.objects.get(code__iexact=coupon_code, active=True)
                     
-                    # Check if the coupon is within its active and expiry dates
+                    
                     current_date = timezone.now().date()
                     if current_date < coupon.active_date or current_date > coupon.expiry_date:
                         messages.warning(request, 'Invalid coupon code or expired')
+                        
+                    if cart_total_amount < coupon.limit:
+                        remain=limit=cart_total_amount
+                        messages.warning(request, f"Minimum amount to use {coupon.code} is ${coupon.limit} ")
                     else:
-                        # Apply the coupon discount to the cart total
+                        
                         money=cart_total_amount
                         cart_total_amount -= (cart_total_amount * coupon.discount) / 100
                         request.session['applied_coupon'] = cart_total_amount
@@ -546,11 +474,15 @@ def cart_view(request):
 
                 except Coupon.DoesNotExist:
                     messages.warning(request, 'Invalid coupon code')
+                    
+                else:
+            
+                    coupon_form = CouponForm()
         else:
             coupon_form = CouponForm()
             
             
-        
+            
         
         
 
@@ -566,7 +498,8 @@ def cart_view(request):
     
     print("hello123")
     messages.warning(request, "Your cart is empty")
-    return redirect('app1:index')
+    return redirect('app1:index') 
+    
      
     
        
@@ -575,215 +508,8 @@ def cart_view(request):
     
 
     
-# def cart_view(request):
-#     cart_total_amount = 0
-
-#     if 'cart_data_obj' in request.session:
-#         cart_data = request.session.get('cart_data_obj', {})
-#         print(cart_data)
-
-#         for p_id, item in cart_data.items():
-#             try:
-#                 # Split the price string into individual prices and convert to float
-#                 prices = [float(price) for price in item.get('price', '').split()]
-#                 print(prices)
-                
-#                 # Sum up the individual prices
-#                 total_price = sum(prices)
-#                 print(total_price)
-#                 qty = int(item.get('qty', 0))
-#                 cart_total_amount += qty * total_price
-#             except (ValueError, TypeError):
-#                 # Handle conversion errors if qty or total_price is not a valid number
-#                 pass
-            
-#         # Coupon
-#         if request.method == 'POST':
-#             coupon_form = CouponForm(request.POST)  # Instantiate the coupon form with the POST data
-
-#             if coupon_form.is_valid():
-#                 coupon_code = coupon_form.cleaned_data['code']
-#                 print(coupon_code)
-#                 try:
-#                     # Assuming you have a Coupon model
-#                     coupon = Coupon.objects.get(code__iexact=coupon_code, active=True)
-                    
-#                     # Check if the coupon is within its active and expiry dates
-#                     current_date = timezone.now().date()
-#                     if current_date < coupon.active_date or current_date > coupon.expiry_date:
-#                         messages.warning(request, 'Invalid coupon code or expired')
-#                     else:
-#                         # Apply the coupon discount to the cart total
-#                         cart_total_amount -= (cart_total_amount * coupon.discount) / 100
-#                         request.session['applied_coupon'] = cart_total_amount
-#                         messages.success(request, f'Coupon "{coupon.code}" applied successfully')
-
-#                 except Coupon.DoesNotExist:
-#                     messages.warning(request, 'Invalid coupon code')
-        
-#         else:
-#             coupon_form = CouponForm()
-            
-#     else:
-#         messages.warning(request, "Your cart is empty")
-#         return redirect('app1:index')
-
-#     return render(request, 'app1/cart.html', {
-#         'cart_data': cart_data,
-#         'totalcartitems': len(cart_data),
-#         'cart_total_amount': cart_total_amount,
-#         'coupon_form': coupon_form,  # Pass the coupon form to the template
-#     })
-
-#     # messages.warning(request, "Your cart is empty")
-#     # return redirect('app1:index')
 
 
-
-
-# def cart_view(request):
-#     cart_total_amount = 0
-
-#     if 'cart_data_obj' in request.session:
-#         cart_data = request.session.get('cart_data_obj', {})
-#         print(cart_data)
-
-#         for p_id, item in cart_data.items():
-#             try:
-#                 # Split the price string into individual prices and convert to float
-#                 prices = [float(price) for price in item.get('price', '').split()]
-#                 print(prices)
-                
-#                 # Sum up the individual prices
-#                 total_price = sum(prices)
-#                 print(total_price)
-#                 qty = int(item.get('qty', 0))
-#                 cart_total_amount += qty * total_price
-#             except (ValueError, TypeError):
-#                 # Handle conversion errors if qty or total_price is not a valid number
-#                 pass
-            
-            
-             
-            
-#         # coupon
-#             if request.method == 'POST':
-#                 coupon_form = CouponForm(request.POST)  # Instantiate the coupon form with the POST data
-
-#                 if coupon_form.is_valid():
-#                     coupon_code = coupon_form.cleaned_data['code']
-#                     print(coupon_code)
-#                     try:
-#                         # Assuming you have a Coupon model
-#                         coupon = Coupon.objects.get(code__iexact=coupon_code, active=True)
-                        
-#                         # Check if the coupon is within its active and expiry dates
-#                         current_date = timezone.now().date()
-#                         if current_date < coupon.active_date or current_date > coupon.expiry_date:
-#                             messages.warning(request, 'Invalid coupon code or expired')
-#                         else:
-#                             # Apply the coupon discount to the cart total
-#                             cart_total_amount -= (cart_total_amount * coupon.discount) / 100
-#                             request.session['applied_coupon']=cart_total_amount
-#                             messages.success(request, f'Coupon "{coupon.code}" applied successfully')
-                            
-
-#                     except Coupon.DoesNotExist:
-#                         messages.warning(request, 'Invalid coupon code')
-                
-
-#             else:
-#                 coupon_form = CouponForm()
-                
-            
-
-#         return render(request, 'app1/cart.html', {
-#             'cart_data': cart_data,
-#             'totalcartitems': len(cart_data),
-#             'cart_total_amount': cart_total_amount,
-#             # 'coupon_form': coupon_form,  # Pass the coupon form to the template
-#         })
-    
-#     messages.warning(request, "Your cart is empty")
-#     return redirect('app1:index')
-#     #     return render(request, 'app1/cart.html', {
-#     #         'cart_data': cart_data,
-#     #         'totalcartitems': len(cart_data),
-#     #         'cart_total_amount': cart_total_amount
-#     #     })
-#     # else:
-   
-    
-# # def cart_view(request):
-#     user = request.user
-#     cart_total_amount = 0
-
-#     try:
-#         cart = user.cart
-#     except Cart.DoesNotExist:
-#         cart = None
-
-#     if cart:
-#         cart_items = CartItem.objects.filter(cart=cart)
-
-#         for cart_item in cart_items:
-#             print(f"Product Price: {cart_item.product.price}, Quantity: {cart_item.quantity}")
-#             total_price = float(cart_item.product.price) * cart_item.quantity
-#             cart_total_amount += total_price
-            
-
-#         return render(request, 'app1/cart.html', {
-#             'cart_items': cart_items,
-#             'totalcartitems': cart_items.count(),
-#             'cart_total_amount': cart_total_amount
-#         })
-#     else:
-#         messages.warning(request, "Your cart is empty")
-#         return redirect('app1:index')   
-    
-
-
-# db cart view
-# def cart_view(request):
-#     cart_total_amount = 0
-
-#     if request.user.is_authenticated:
-#         # Retrieve products from the database for authenticated users
-#         user_cart, created = Cart.objects.get_or_create(user=request.user)
-#         cart_items = CartItem.objects.filter(cart=user_cart)
-
-#         # Save the products to the session
-#         cart_data = {}
-#         for cart_item in cart_items:
-#             product_id = str(cart_item.product.id)
-#             cart_data[product_id] = {
-#                 'title': cart_item.product.title,
-#                 'qty': cart_item.quantity,
-#                 'price': str(cart_item.product.price),
-#                 'pid': str(cart_item.product.pid),
-#                 'image': str(cart_item.product.image),
-#             }
-
-#             try:
-#                 # Calculate total price for the cart view
-#                 total_price = float(cart_item.product.price) * cart_item.quantity
-#                 cart_total_amount += total_price
-#             except (ValueError, TypeError):
-#                 # Handle conversion errors if quantity or total_price is not a valid number
-#                 pass
-
-#         # Save the updated cart data to the session
-#         request.session['cart_data_obj'] = cart_data
-
-#         return render(request, 'app1/cart.html', {
-#             'cart_data': cart_data,
-#             'totalcartitems': len(cart_data),
-#             'cart_total_amount': cart_total_amount
-#         })
-#     else:
-#         # Handle the case for anonymous users
-#         messages.warning(request, "Your cart is empty")
-#         return redirect('app1:index')
 
 
 def delete_item_from_cart(request):
@@ -867,44 +593,63 @@ def update_from_cart(request):
    
    
 
-
+@never_cache
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def checkout_view(request):
+    if not request.user.is_authenticated:
+      messages.warning(request,f"Please log in to checkout")
+      return redirect("app1:index")
+   
     
     
     
     cart_total_amount = 0
     total_amount = 0
 
-    if not request.user.is_authenticated:
-        # Handle anonymous user (redirect to login, show a message, etc.)
-        messages.warning(request, "Please log in to complete the checkout.")
-        return redirect('userauths:login')  # Adjust the redirect URL as needed
+      
 
     if 'cart_data_obj' in request.session:
-        cart_data = request.session['cart_data_obj']
-        print(cart_data)
+        # cart_data = request.session['cart_data_obj']
+        cart_data = request.session.get('cart_data_obj',{})
+        
+        if cart_data =={}:
+            messages.warning(request, 'Nothing to checkout')
+            return redirect('app1:index')
+        
+        
 
-        # Calculate total_amount for the entire order
+        
         for p_id, item in cart_data.items():
             try:
-                # Split the price string into individual prices and convert to float
+              
                 prices = [float(price) for price in item.get('price', '').split()]
-                # Sum up the individual prices
+               
                 total_price = sum(prices)
                 qty = int(item.get('qty', 0))
                 total_amount += qty * total_price
+                
             except (ValueError, TypeError):
-                # Handle conversion errors if qty or total_price is not a valid number
+               
                 pass
+            
+            product1=Product.objects.filter(title=item.get('title'))
+                    
+            print(product1)
+            for p in product1:
+                print(p.stock_count, qty)
+                print("hello")
+                if int(p.stock_count) < qty:
+                    
+                    messages.warning(request,f"{qty} quantity of product not available")
+                    return redirect('app1:cart')
 
 # coupon applied total amount
 
         applied_coupon = request.session.get('applied_coupon', None)
-    # discount=total_amount-applied_coupon
-    # print(discount)
+    
 
         if applied_coupon is not None:
-                # If a coupon is applied, use the stored cart_total_amount
+                
             cart_total_amount = applied_coupon
             del request.session['applied_coupon']
             request.session['invoice_amt'] = cart_total_amount
@@ -913,10 +658,9 @@ def checkout_view(request):
 
             
         else:
-                # If no coupon is applied, calculate the cart_total_amount from the cart_data
+                
             cart_total_amount = 0    
-            # if 'cart_data_obj' in request.session:
-            #     cart_data = request.session['cart_data_obj']
+           
 
             for p_id, item in cart_data.items():
                 try:
@@ -924,26 +668,29 @@ def checkout_view(request):
                     total_price = sum(prices)
                     qty = int(item.get('qty', 0))
                     cart_total_amount += qty * total_price
+                    
                 except (ValueError, TypeError):
                     pass
 
 
-            print(cart_total_amount)
+           
             request.session['cart_total_amount'] = cart_total_amount
             discount=total_amount-cart_total_amount
 
-
+    else:
+        messages.warning(request, "Please add products to checkout")
+        return redirect("app1:index")
 
 
 
         
-        try:
-            active_address = Address.objects.get(user=request.user, status=True)
-        except Address.DoesNotExist:
-            messages.warning(request, "Please select an address before proceeding.")
-            return redirect('app1:dashboard')  # Redirect to the address selection page
+    try:
+        active_address = Address.objects.get(user=request.user, status=True)
+    except Address.DoesNotExist:
+        messages.warning(request, "Please select an address before proceeding.")
+        return redirect('app1:dashboard') 
 
-       
+    
 
         
         
@@ -979,7 +726,7 @@ def checkout_view(request):
     
     
     
-    print(cart_total_amount)
+    
     return render(request, 'app1/checkout.html', {
             'cart_data': cart_data,
             'totalcartitems': len(cart_data),
@@ -1013,7 +760,10 @@ def checkout_view(request):
 
 
 
-
+def validate_phone_number(value):
+   
+    if not value.isdigit() or len(value) < 10:
+        raise ValidationError('Invalid phone number. Please enter a valid numeric value with at least 10 digits.')
 
 
 
@@ -1024,9 +774,9 @@ def checkout_view(request):
 
 def customer_dashboard(request):
     if not request.user.is_authenticated:
-        # Handle anonymous user (redirect to login, show a message, etc.)
-        messages.warning(request, "Please log in to access Dashboard.")
-        return redirect('app1:index')
+      messages.warning(request,f"Please log in to access dashboard")
+      return redirect("app1:index")
+   
     
         
     orders=CartOrder.objects.filter(user=request.user).order_by("-id")
@@ -1067,20 +817,49 @@ def customer_dashboard(request):
         messages.success(request, 'UserDetails created successfully.')
     
     if request.method == 'POST':
-        address =request.POST['address']
-        mobile = request.POST['phone']
+        addresss = request.POST.get('address', None)
+        mobile = request.POST.get('phone', '')
+
+       
+        if not addresss or addresss.isspace() or not mobile:
+            messages.warning(request, 'Address and phone number cannot be empty or contain only spaces.')
+        else:
+            try:
+                validate_phone_number(mobile)
+            except ValidationError as e:
+                messages.warning(request, str(e))
+            else:
+               
+                new_address, created = Address.objects.get_or_create(
+                user=request.user,
+                address=addresss,
+                mobile=mobile
+            )
+
+            if created:
+                messages.success(request, 'Address added successfully.')
+                return redirect("app1:dashboard")
+            else:
+                messages.warning(request, 'Address already exists.')
+                return redirect("app1:dashboard")
+                
+                
+
+    
+    
         
-        new_address =Address.objects.create (
-            user =request.user,
-            address =address,
-            mobile =mobile
-        )
-        messages.success(request,'Address Added Successfully')
-        return redirect("app1:dashboard")
+
+    
+        
+    wallet_amt = wallet.objects.filter(user=request.user)
+
+    if not wallet_amt.exists():
+        
+        new_wallet = wallet.objects.create(user=request.user)  
+        print("Wallet created for user:", request.user)
     else:
-        print("Error")
-        
-    wallet_amt=wallet.objects.filter(user=request.user)
+       
+        print("Wallet already exists for user:", request.user)
     
     context ={
         'user_profile':user_profile,
@@ -1096,15 +875,29 @@ def customer_dashboard(request):
     
     return render(request,'app1/dashboard.html',context)
 
+
+
+
+def delete_address(request, id):
+    if not request.user.is_authenticated:
+      messages.warning(request,f"Please log in to access dashboard")
+      return redirect("app1:index")
+  
+    address = get_object_or_404(Address, id=id)
+    address.delete()
+    messages.error(request, 'Address deleted successfully')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    
+    
     
 
 
 def order_detail(request, id):
-    # Use get_object_or_404 to ensure that the order exists or return a 404 response
+   
     order = get_object_or_404(CartOrder, user=request.user, id=id)
     print(order)
 
-    # Use filter based on the specific order instance
+    
     products = CartOrderItems.objects.filter(order=order)
 
     context = {
@@ -1124,7 +917,8 @@ def make_address_default(request):
 
 
 
-
+@never_cache
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def place_order(request):
     cart_total_amount = 0
     total_amount = 0
@@ -1190,7 +984,9 @@ def place_order(request):
     
     
     #till here
-    del request.session['cart_data_obj']
+        del request.session['cart_data_obj']
+    else:
+        return redirect("app1:index")
         
     
              
@@ -1360,14 +1156,14 @@ def payment_completed_view(request):
             discount=0
             for p_id, item in cart_data.items():
                 try:
-                    # Split the price string into individual prices and convert to float
+                   
                     prices = [float(price) for price in item.get('price', '').split()]
-                    # Sum up the individual prices
+                    
                     total_price = sum(prices)
                     qty = int(item.get('qty', 0))
                     total_amount += qty * total_price
                 except (ValueError, TypeError):
-                    # Handle conversion errors if qty or total_price is not a valid number
+                    
                     pass
         
         
@@ -1375,25 +1171,14 @@ def payment_completed_view(request):
         
 
         if request.user.is_authenticated:
-            # Create CartOrder for the entire order only if the user is authenticated
+            
             order = CartOrder.objects.create(
                 user=request.user,
                 price=total_amount,
                 paid_status=True
             )
 
-            # Create CartOrderItems for each product in the cart
-            
-            # coupon check
-            # applied_coupon = request.session.get('invoice_amt', None)
-            # discount=request.session.get('discount', None)
-
-            # if applied_coupon is not None:
-            #     # If a coupon is applied, use the stored cart_total_amount
-            #     cart_total_amount = applied_coupon
-            #     del request.session['invoice_amt']
-            #     del request.session['discount']
-            
+           
             
             # till here
             
@@ -1408,7 +1193,7 @@ def payment_completed_view(request):
                     qty = int(item.get('qty', 0))
                     cart_total_amount += qty * total_price
 
-                    # Create CartOrderItems for each product
+                   
                     CartOrderItems.objects.create(
                         order=order,
                         invoice_no="INVOICE_NO-" + str(order.id),
@@ -1455,12 +1240,15 @@ def payment_failed_view(request):
 
 @login_required
 def wishlist_view(request):
+    if not request.user.is_authenticated:
+      messages.warning(request,f"Please log in to wishlist items")
+      return redirect("app1:index")
     
     wishlist=wishlist_model.objects.filter(user=request.user)
     
     
     if not wishlist:
-        # If the wishlist is empty, redirect to the index view with a message
+       
         messages.warning(request," wishlist is empty")
         return redirect("app1:index") 
     
@@ -1531,4 +1319,63 @@ def remove_wishlist(request):
 
 
 
+def referral_coupon(request):
+    
+    if request.method == 'POST':
+        
+        code= request.POST.get("referral_code")
+        try:
+            # ref_code = UserDetails.objects.filter(code=code)
+            ref_user_details = get_object_or_404(UserDetails, code=code)
+            
+            print(ref_user_details.user.email)
+            
+                
+           
+        except UserDetails.DoesNotExist:
+            messages.warning(request, 'Invalid Referral code')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+            
+        except Exception as e:
+            
+           messages.warning(request, "Invalid Referral code")
+           return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+           
+        
+        if ref_user_details.user ==request.user:
+                messages.warning(request, 'Coupon cannot be used for same user')
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+                
+        
+        if ref_user_details:
+            wallet_instance, created = wallet.objects.get_or_create(user=request.user)
+            
+            wallet_instance.Amount += 500
+            wallet_instance.referral=True
+            wallet_instance.save()
+           
+            messages.success(request,'$500 has been credited to your account')
+            referral_user=wallet.objects.get(user=ref_user_details.user.id)
+    
+    
+            referral_user.Amount += 200
+            referral_user.save()
+            print(referral_user)
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        
+        
+def about_us(request):
+    
+    return render(request, 'app1/about_us.html')
 
+def contact(request):
+    
+    return render(request, 'app1/contact.html')
+
+        
+            
+            
+        
+        
+    

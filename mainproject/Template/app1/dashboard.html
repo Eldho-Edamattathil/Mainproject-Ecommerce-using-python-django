@@ -28,9 +28,9 @@
                                         <li class="nav-item">
                                             <a class="nav-link" id="orders-tab" data-bs-toggle="tab" href="#orders" role="tab" aria-controls="orders" aria-selected="false"><i class="fi-rs-shopping-bag mr-10"></i>Orders</a>
                                         </li>
-                                        <li class="nav-item">
+                                        <!-- <li class="nav-item">
                                             <a class="nav-link" id="track-orders-tab" data-bs-toggle="tab" href="#track-orders" role="tab" aria-controls="track-orders" aria-selected="false"><i class="fi-rs-shopping-cart-check mr-10"></i>Track Your Order</a>
-                                        </li>
+                                        </li> -->
                                         <li class="nav-item">
                                             <a class="nav-link" id="address-tab" data-bs-toggle="tab" href="#address" role="tab" aria-controls="address" aria-selected="true"><i class="fi-rs-marker mr-10"></i>My Address</a>
                                         </li>
@@ -43,7 +43,7 @@
                                             
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link" href="page-login-register.html"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
+                                            <a class="nav-link" href="{% url 'userauths:logout' %}"><i class="fi-rs-sign-out mr-10"></i>Logout</a>
                                         </li>
                                     </ul>
                                 </div>
@@ -88,8 +88,104 @@
                                         <!-- <div class="card-body">
                                             <p>From your account dashboard. you can easily check &amp; view your <a href="#">recent orders</a>, manage your <a href="#">shipping and billing addresses</a> and <a href="#">edit your password and account details.</a></p>
                                         </div> -->
+                                        
                                     </div>
+                                    <br> <br>
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                                                            <div>
+                                                                <h4>Your Referral Code</h4>
+                                                                <br>
+                                                                <p style="font-weight: 500">
+                                                                    <input type="hidden" id="coupon-code1" value="{{ user_profile.code }}">
+                                                                    <span id="coupon-code-span" style="border: 1px solid #e5e5e5; padding: 5px; border-radius: 5px; color: rgb(6, 80, 145);">{{ user_profile.code }}</span>
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <button id="copy-coupon-button" class="btn btn-primary">Copy</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    
+                                    <script>
+                                    document.addEventListener('DOMContentLoaded', function () {
+                                        // Get the button with the id 'copy-coupon-button'
+                                        var copyButton = document.getElementById('copy-coupon-button');
+                                    
+                                        // Attach a click event listener to the button
+                                        copyButton.addEventListener('click', function () {
+                                            // Find the input with the id 'coupon-code1' to get the coupon code
+                                            var couponCodeInput = document.getElementById('coupon-code1');
+                                    
+                                            // Create a temporary input element
+                                            var tempInput = document.createElement('input');
+                                    
+                                            // Set the value of the temporary input to the coupon code
+                                            tempInput.value = couponCodeInput.value;
+                                    
+                                            // Append the input to the body
+                                            document.body.appendChild(tempInput);
+                                    
+                                            // Select the input's content
+                                            tempInput.select();
+                                    
+                                            // Copy the selected content
+                                            document.execCommand('copy');
+                                    
+                                            // Remove the temporary input element
+                                            document.body.removeChild(tempInput);
+                                    
+                                            // Optionally, provide visual feedback to the user (e.g., show a tooltip)
+                                            var tooltip = new bootstrap.Tooltip(copyButton, {
+                                                title: 'Copied!',
+                                                trigger: 'manual',
+                                                placement: 'top'
+                                            });
+                                    
+                                            // Show the tooltip
+                                            tooltip.show();
+                                    
+                                            // Hide the tooltip after a brief delay
+                                            setTimeout(function () {
+                                                tooltip.hide();
+                                            }, 1000);
+                                        });
+                                    });
+                                    </script>
+                                    <br><br>
+                                    {% for w in wallet_amt %}
+                                    {% if w.referral == False  %}
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="card">
+                                                    <div class="card-body">
+                                                        <h4>Enter Referral Code</h4>
+                                                        <br><br>
+                                                        <form action="{% url 'app1:referral-coupon' %}" method="post" id="referralForm">
+                                                            {% csrf_token %}
+                                                            <label for="referral_code">Referral Code:</label>
+                                                            <input type="text" id="referral_code" name="referral_code" required>
+                                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
                                 </div>
+                              
                                     <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
                                         <div class="card">
                                             <div class="card-header">
@@ -148,7 +244,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="tab-pane fade" id="track-orders" role="tabpanel" aria-labelledby="track-orders-tab">
+                                    <!-- <div class="tab-pane fade" id="track-orders" role="tabpanel" aria-labelledby="track-orders-tab">
                                         <div class="card">
                                             <div class="card-header">
                                                 <h5 class="mb-0">Orders tracking</h5>
@@ -172,7 +268,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> -->
                                     <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
                                         <div class="row">
                                           <div>
@@ -193,7 +289,7 @@
 
                                                 </div>
                                                 <div class="col-md-12">
-                                                  <button type="submit" placeholder="Phone" required="" class="btn btn-fill-out submit font-weight-bold" name="submit"  value="submit"  >Save Address</button>
+                                                  <button type="submit" >Save Address</button>
 
                                                 </div>
 
@@ -206,6 +302,7 @@
 
                                           <br>
                                           <br>
+                                          {% if address is not none %}
                                           {% for a in address %}
                                             <div class="col-lg-6">
                                                 <div class="card mb-3 mb-lg-0">
@@ -220,7 +317,8 @@
 
                                                         </address>
                                                         <p>New York</p>
-                                                        <a href="#" class="btn-small">Edit</a>
+                                                        <a href="{% url 'app1:delete-address' a.id  %}">Delete</a>
+                                                        
                                                         <br>
                                                         {% if a.status %}
                                                         <i data-address-id ="{{a.id}}" class="fa fa-check-circle text-success check{{a.id}} check" ></i>
@@ -230,10 +328,11 @@
                                                         <button data-address-id="{{a.id}}"  class="btn make-default-address button{{a.id}} action_btn">Make Default</button>
                                                         {% endif %}
                                                     </div>
-                                                   
+                                                  
                                                 </div>
                                             </div>
                                             {% endfor %}
+                                            {% endif %}
                                             <!-- <div class="col-lg-6">
                                                 <div class="card">
                                                     <div class="card-header">

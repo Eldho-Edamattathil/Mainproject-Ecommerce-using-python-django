@@ -23,18 +23,13 @@ from django.db.models.functions import TruncMonth, TruncYear
 @login_required(login_url='adminside:admin_login')  # Use the named URL pattern
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def dashboard(request):
-    # if not request.user.is_authenticated:
+   
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
 
     product_count=Product.objects.count()
     category_count=Category.objects.count()
-    # orders= CartOrder.objects.annotate(month=ExtractMonth("order_date")).values("month").annotate(count=Count("id")).values("month","count")
-    # month=[]
-    # total_orders=[]
-    # for i in orders:
-    #     month.append(calendar.month_name[i["month"]])
-    #     total_orders.append(i["count"])
+    
     
     orders = CartOrder.objects.all()
     last_orders = CartOrder.objects.order_by('-order_date')[:5]
@@ -65,7 +60,7 @@ def dashboard(request):
     
     monthly_order_counts = (
         CartOrder.objects
-        .filter(order_date__year=datetime.now().year, paid_status=True)  # Filter by current year and paid orders
+        .filter(order_date__year=datetime.now().year, paid_status=True)  
         .annotate(month=TruncMonth('order_date'))
         .values('month')
         .annotate(order_count=Count('id'))
@@ -75,7 +70,7 @@ def dashboard(request):
     monthly_dates = [entry['month'].strftime('%Y-%m') for entry in monthly_order_counts]
     monthly_counts = [entry['order_count'] for entry in monthly_order_counts]
 
-    # Fetch yearly order counts and their respective dates
+    
     yearly_order_counts = (
         CartOrder.objects
         .annotate(year=TruncYear('order_date'))
@@ -87,19 +82,17 @@ def dashboard(request):
     yearly_dates = [entry['year'].strftime('%Y') for entry in yearly_order_counts]
     yearly_counts = [entry['order_count'] for entry in yearly_order_counts]
 
-    # statuses = ['Delivered', 'Processing', 'Cancelled', 'Return','Shipped']
-    # order_counts = [CartOrder.objects.filter(product_status=status).count() for status in statuses]
-    statuses = ['Delivered', 'Processing', 'Cancelled', 'Return', 'Shipped']
+    
+    stat = ['delivered', 'processing', 'cancelled', 'shipped']
 
-    order_counts = (
+    order_counts = [(
         CartOrder.objects
-        .filter(product_status__in=statuses)
+        .filter(product_status__icontains=stat)
         .values('product_status')
         .annotate(count=Count('id'))
         .order_by('product_status')
-    )
-    status_list = [entry['product_status'] for entry in order_counts]
-    count_list = [entry['count'] for entry in order_counts]
+    )]
+   
 
     
     context={
@@ -115,8 +108,11 @@ def dashboard(request):
         'last_orders':last_orders,
         'revenue':revenue,
         'total_users_count':total_users_count,
-        'status_list':status_list,
-        'count_list':count_list
+        # 'status_list':status_list,
+        # 'count_list':count_list,
+        'stat':stat,
+        'order_counts':order_counts
+        
         
         
         
@@ -126,67 +122,61 @@ def dashboard(request):
     return render(request, 'adminside/admin_index.html', context)
   
   
+  
+
+def sales_report(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
+    start_date_value = ""
+    end_date_value = ""
+    orders = CartOrder.objects.filter(product_status='delivered').order_by('-order_date')
+
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        start_date_value = start_date
+        end_date_value = end_date
+
+        if start_date and end_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
+            
+            orders = CartOrder.objects.filter(order_date__range=(start_date, end_date), product_status='delivered').order_by('-order_date')
+
+    context = {
+        'orders': orders,
+        'start_date_value': start_date_value,
+        'end_date_value': end_date_value
+    }
+
+    return render(request, 'adminside/sales_report.html', context)
+  
+  
+  
+  
+  
 def admin_products_list(request):
+    if not request.user.is_authenticated:
+        if not request.user.is_superadmin:
+            return redirect('adminside:admin_login')
   
-  products = Product.objects.all()
-  p=Paginator(Product.objects.all(),10)
-  page=request.GET.get('page')
-  productss=p.get_page(page)
-  
-  context ={
-    "products":products ,
-    "productss":productss
-  }
-  return render(request,'adminside/admin_products_list.html', context)
-
-
-
-
-
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-# def admin_products_details(request, pid):
-#     print(pid)
-#     if not request.user.is_authenticated:
-#         return redirect('adminside:admin_login')
-
-#     try:
-#         product = Product.objects.get(pid=pid)
-       
-#     except Product.DoesNotExist:
-#         return HttpResponse("Product not found", status=404)
-
-#     if request.method == 'POST':
-#         form = CreateProductForm(request.POST, request.FILES, instance=product)
-#         if form.is_valid():
-#             # Save the form including the image
-#             product = form.save(commit=False)
-#             product_image = form.cleaned_data['new_image']
-#             if product_image is not None:
-#                 product.image=product_image
-            
-#             product.save()
-            
-#             return redirect('admindash:admin_products_list')
-#         else:
-#             print(form.errors)
-#             context = {
-#                 'form': form,
-#                 'product': product,
-                
-#             }
-#             return render(request, 'adminside/admin_products_details.html', context)
-
-#     else:
-#         initial_data = {'new_image': product.image.url if product.image else ''}
-#         form = CreateProductForm(instance=product, initial=initial_data)
-#         # print(form)
+    products = Product.objects.all()
+    p=Paginator(Product.objects.all(),10)
+    page=request.GET.get('page')
+    productss=p.get_page(page)
     
-#     context = {
-#         'form': form,
-#         'product': product,
-        
-#     }
-#     return render(request, 'adminside/admin_products_details.html', context)
+    context ={
+        "products":products ,
+        "productss":productss
+    }
+    return render(request,'adminside/admin_products_list.html', context)
+
+
+
+
+
+
 
 
 
@@ -276,58 +266,13 @@ def block_unblock_products(request, pid):
   
     
     
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-# def add_product(request):
-#     if not request.user.is_authenticated:
-#         return HttpResponse("Unauthorized", status=401)
-#     categories = Category.objects.all()
-   
 
-#     if request.method == 'POST':
-#         product_name= request.POST.get('title')
-#         product_stock_count= request.POST.get('stock_count')
-#         description= request.POST.get('description')
-#         max_price= request.POST.get('old_price')
-#         sale_price= request.POST.get('price')
-#         category_name= request.POST.get('category')
-        
-       
-       
-
-#         category = get_object_or_404(Category, title=category_name)
-        
-
-#         product = Product(
-#             title=product_name,
-#             stock_count=product_stock_count,
-#             category=category,
-            
-#             description=description,
-#             old_price=max_price,
-#             price=sale_price,
-#             image=request.FILES['image_feild']  # Make sure your file input field is named 'product_image'
-#         )
-#         product.save()
-        
-
-#         return redirect('admindash:admin_products_list')
-#     else:
-#         form=CreateProductForm()
-#     content = {
-#         'categories': categories,
-          
-#         'form': form
-#     }
-#     return render(request,'adminside/admin_add_product.html', content)
-
-
-# new add produt
 
 
 @login_required(login_url='adminside:admin_login')
 def add_product(request):
-    if not request.user.is_authenticated:
-        return HttpResponse("Unauthorized", status=401)
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
 
     categories = Category.objects.all()
 
@@ -466,10 +411,7 @@ def admin_add_category(request):
             messages.success(request, 'Category added successfully.')
         
         
-        # cat_data = Category(title=cat_title,
-        #                     image=request.FILES.get('category_image'))
-    
-        # cat_data.save()
+        
     else:
         return render(request, 'adminside/admin_category_list.html')
     
@@ -478,42 +420,7 @@ def admin_add_category(request):
 
 
 
-# def admin_category_edit(request, cid):
-    if not request.user.is_authenticated:
-        return redirect('adminside:admin_login')
 
-    # Using get_object_or_404 to get the Category or return a 404 response if it doesn't exist
-    categories = get_object_or_404(Category, cid=cid)
-    categories_title=categories.title
-    categories_image=categories.image
-    
-    context={
-        'categories_title':categories_title,
-        'categories_image':categories_image
-    }
-
-    if request.method == 'POST':
-        # Update the fields of the existing category object
-        cat_title = request.POST.get("category_name")
-        cat_image = request.FILES.get('category_image')
-        categories_title=cat_title
-        categories_image=cat_image
-        
-        categories.save()
-        
-
-        # Save the changes to the database
-        return redirect('admindash:admin_category_list')
-    
-   
-        
-
-    # context = {
-    #     "categories": categories
-    # }
-
-    # Render the template even for GET requests to display the form
-    return render(request, 'adminside/admin_category_edit.html', context)
 @login_required(login_url='adminside:admin_login')
 def admin_category_edit(request, cid):
     if not request.user.is_authenticated:
@@ -566,8 +473,8 @@ def delete_category(request,cid):
 @login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def available_category(request,cid):
-    if not request.user.is_authenticated:
-        return HttpResponse("Unauthorized", status=401)
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     
     category = get_object_or_404(Category, cid=cid)
     
@@ -579,16 +486,7 @@ def available_category(request,cid):
     category.save()
 
     
-    # cat_list=Category.objects.filter(parent_id=category_id)
-    # for i in cat_list.values():
-    #     print(i)
     
-    # for category in cat_list:
-    #     if category.is_available:
-    #         category.is_available=False
-    #     else:
-    #         category.is_available=True
-    #     category.save()
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
@@ -646,6 +544,8 @@ def update_product_status(request, id):
     
     
 def admin_order_detail(request,id):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     order = get_object_or_404(CartOrder, id=id)
     print(order)
 
@@ -665,36 +565,13 @@ def admin_order_detail(request,id):
 
     
     
-# admin cancel order
-
-# def admin_cancel_order(request,id):
-#     order = get_object_or_404(CartOrder, id=id)
-#     print(order)
-#     order.product_status='cancelled'
-#     order.save()
-#     products = CartOrderItems.objects.filter(order=order)
-#     for p in products:
-#         print(p.item)
-#         productss=Product.objects.filter(title=p.item)
-#         for s in productss:
-#             print(s.stock_count)
-#             s.stock_count = int(s.stock_count)+p.qty
-#             s.save()
-            
-            
-            
-    
-    
-    
-#     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    
+  
     
 
     
 @login_required(login_url='adminside:admin_login')      
 def admin_cancel_order(request, id):
-    # if not request.user.is_superadmin:
-    #     return redirect('adminside:admin_login')
+   
     order = get_object_or_404(CartOrder, id=id)
     # user_wallet = get_object_or_404(wallet, user=request.user)
     user_wallet, created = wallet.objects.get_or_create(user=request.user)
@@ -709,8 +586,7 @@ def admin_cancel_order(request, id):
         
         if order.paid_status==True:
             user_wallet.Amount+=order.price
-            # credit=order.price
-            # request.session['credit']=credit
+            
             user_wallet.save()
             messages.warning(request,"Refund amount has been added to the wallet")
             
@@ -747,23 +623,29 @@ def create_coupon(request):
     if request.method == 'POST':
         code = request.POST['code']
         discount = request.POST['discount']
+        limit = request.POST['limit']
         active = request.POST.get('active') == 'on'
         active_date = request.POST['active_date']
         expiry_date = request.POST['expiry_date']
 
-        # Check if active_date is not greater than expiry_date
+        if int(limit) < 0:
+            messages.error(request,"Please increase the limit")
+            return redirect('admindash:create-coupon')
+       
+       
         if active_date > expiry_date:
             messages.error(request, 'Active date should not be greater than expiry date')
-            return render(request, 'adminside/create-coupon.html')
+            return redirect('admindash:create-coupon')
 
-        # Check if the coupon with the same code already exists
+       
         if Coupon.objects.filter(code=code).exists():
             messages.error(request, f'Coupon with code {code} already exists')
-            return render(request, 'adminside/create-coupon.html')
+            return redirect('admindash:create-coupon')
 
         coupon = Coupon(
             code=code,
             discount=discount,
+            limit=limit,
             active=active,
             active_date=active_date,
             expiry_date=expiry_date
@@ -785,18 +667,31 @@ def edit_coupon(request,id):
     if request.method == 'POST':
         code = request.POST['code']
         discount = request.POST['discount']
+        limit = request.POST['limit']
         active = request.POST.get('active') == 'on'
         active_date = request.POST['active_date']
         expiry_date = request.POST['expiry_date']
         
 
-        # Check if active_date is not greater than expiry_date
+       
         if active_date > expiry_date:
             messages.error(request, 'Active date should not be greater than expiry date')
-            return render(request, 'adminside/create-coupon.html')
+            return redirect('admindash:create-coupon')
+        
+        if not limit.isdigit():
+            messages.error(request, "Please enter a valid positive integer for the limit")
+            return redirect('admindash:create-coupon')
+        
+        limit = limit.strip()
+
+        if int(limit) < 0:
+            messages.error(request,"Please increase the limit")
+            return redirect('admindash:create-coupon')
+            
         
         coupon_code.code=code
         coupon_code.discount=discount
+        coupon_code.limit=limit
         coupon_code.active_date=active_date
         coupon_code.expiry_date=expiry_date
         coupon_code.active=active
@@ -846,7 +741,7 @@ def product_offers(request):
         if product_offer:
            
             discounted_price = p.old_price - (p.old_price * product_offer.discount_percentage / 100)
-            p.price = max(discounted_price, Decimal('0.00'))  # Ensure the price is not negative
+            p.price = max(discounted_price, Decimal('0.00'))  
         else:
             
             p.price = p.old_price
@@ -912,6 +807,8 @@ def edit_product_offers(request, id):
 
 
 def create_product_offer(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     if request.method == 'POST':
         form = ProductOfferForm(request.POST)
         if form.is_valid():
@@ -932,12 +829,12 @@ def create_product_offer(request):
                 if active:
                     ProductOffer.objects.update(active=False)
 
-            # Check if any of the fields are filled
+           
                 if discount_percentage or start_date or end_date or active:
                
                     form.save()
             
-            return redirect('admindash:product-offers')  # Redirect to a view displaying the list of product offers
+            return redirect('admindash:product-offers')  
     else:
         form = ProductOfferForm()
 
@@ -969,6 +866,8 @@ def delete_product_offer(request,id):
 
 
 def category_offers(request):
+    if not request.user.is_superadmin:
+        return redirect('adminside:admin_login')
     offers = CategoryOffer.objects.all()
     categories = Category.objects.all()
 
@@ -988,7 +887,7 @@ def category_offers(request):
 
             
                     discounted_price = product.old_price - (product.old_price * cat.discount_percentage / 100)
-                    product.price = max(discounted_price, Decimal('0.00'))  # Ensure the price is not negative
+                    product.price = max(discounted_price, Decimal('0.00'))  
                 
             else:
                 product.price=product.old_price
@@ -1006,40 +905,6 @@ def category_offers(request):
 
 
 
-
-# def edit_category_offers(request, id):
-#     if not request.user.is_superadmin:
-#         return redirect('adminside:admin_login')
-
-#     offer_discount = get_object_or_404(CategoryOffer, id=id)
-#     print(f'Active Date: {offer_discount.start_date}')
-
-#     if request.method == 'POST':
-#         discount = request.POST.get('discount')
-        
-#         active = request.POST.get('active') == 'on'
-#         start_date = request.POST.get('start_date')
-#         end_date = request.POST.get('end_date')
-
-#         if end_date and start_date:
-#             end_date = datetime.strptime(end_date, '%Y-%m-%d')
-#             start_date = datetime.strptime(start_date, '%Y-%m-%d')
-#             if end_date < start_date:
-#                 messages.error(request, 'Expiry date must not be less than the start date.')
-#                 return redirect('admindash:edit-category-offers', id=id)
-
-        
-#         offer_discount.discount_percentage = discount or None
-       
-#         offer_discount.start_date = start_date or None
-#         offer_discount.end_date = end_date or None
-#         offer_discount.active = active
-#         offer_discount.save()
-
-#         messages.success(request, 'Offer updated successfully')
-#         return redirect('admindash:category-offers')
-
-#     return render(request, 'adminside/edit_category_offers.html', {'offer_discount': offer_discount})
 
 
 
@@ -1064,7 +929,7 @@ def edit_category_offers(request, id):
                 messages.error(request, 'Expiry date must not be less than the start date.')
                 return redirect('admindash:edit-category-offers', id=id)
 
-            # Check if the offer can be activated based on the current date
+            
             current_date = timezone.now()
             if start_date and end_date and (current_date < start_date or current_date > end_date):
                 active = False
@@ -1072,7 +937,7 @@ def edit_category_offers(request, id):
             
        
 
-        # Check if there's an active product offer
+        
         active_product_offer = ProductOffer.objects.filter(active=True).first()
 
         if active_product_offer:
@@ -1083,7 +948,7 @@ def edit_category_offers(request, id):
         if active:
             CategoryOffer.objects.exclude(id=offer_discount.id).update(active=False)
 
-        # Continue with your existing logic to update the category offer
+        
         offer_discount.discount_percentage = discount or None
         offer_discount.start_date = start_date or None
         offer_discount.end_date = end_date or None
@@ -1110,7 +975,7 @@ def create_category_offer(request):
             if end_date and start_date and end_date < start_date:
                 messages.error(request, 'Expiry date must not be less than the start date.')
             else:
-                # Check if there is an active offer for the selected category
+               
                 if active and CategoryOffer.objects.filter(category=category, active=True).exists():
                     messages.error(request, 'An active offer already exists for this category.')
                    
