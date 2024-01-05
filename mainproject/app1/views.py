@@ -268,7 +268,7 @@ def add_ajax_review(request, pid):
 
         average_reviews = ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
 
-        # Convert the Decimal to a float for JSON serialization
+       
         average_rating = float(average_reviews['rating']) if average_reviews['rating'] else 0.0
 
         return JsonResponse({
@@ -326,15 +326,6 @@ def filter_product(request):
             return JsonResponse({"error": str(e)})
 
 
-    
-
-    
-    
-        
-    
-
-
-
 # working cart
 
 def add_to_cart(request):
@@ -349,11 +340,6 @@ def add_to_cart(request):
             'image': request.GET['image'],
         }
     }
-    
-    
-    
-        
-    
     
     
 
@@ -382,19 +368,6 @@ def add_to_cart(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-# existing cart view
-
 # modified
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -405,13 +378,6 @@ def cart_view(request):
     print(request.session.items())
     current_date = timezone.now().date()
     available_coupons = Coupon.objects.filter(active=True, active_date__lte=current_date, expiry_date__gte=current_date)
-    
-    
-       
-            
-        
-        
-    
     
     
     if 'cart_data_obj' in request.session:
@@ -482,9 +448,6 @@ def cart_view(request):
             coupon_form = CouponForm()
             
             
-            
-        
-        
 
         return render(request, 'app1/cart.html', {
             'cart_data': cart_data,
@@ -501,16 +464,6 @@ def cart_view(request):
     return redirect('app1:index') 
     
      
-    
-       
-    
-    
-    
-
-    
-
-
-
 
 def delete_item_from_cart(request):
     product_id = str(request.GET['id'])
@@ -529,14 +482,14 @@ def delete_item_from_cart(request):
 
         for p_id, item in cart_data.items():
             try:
-                # Split the price string into individual prices and convert to float
+               
                 prices = [float(price) for price in item.get('price', '').split()]
-                # Sum up the individual prices
+               
                 total_price = sum(prices)
                 qty = int(item.get('qty', 0))
                 cart_total_amount += qty * total_price
             except (ValueError, TypeError):
-                # Handle conversion errors if qty or total_price is not a valid number
+                
                 pass
             
     context = render_to_string("app1/async/cart-list.html", {
@@ -567,14 +520,14 @@ def update_from_cart(request):
 
         for p_id, item in cart_data.items():
             try:
-                # Split the price string into individual prices and convert to float
+                
                 prices = [float(price) for price in item.get('price', '').split()]
-                # Sum up the individual prices
+                
                 total_price = sum(prices)
                 qty = int(item.get('qty', 0))
                 cart_total_amount += qty * total_price
             except (ValueError, TypeError):
-                # Handle conversion errors if qty or total_price is not a valid number
+                
                 pass
 
     context = render_to_string("app1/async/cart-list.html", {
@@ -585,13 +538,7 @@ def update_from_cart(request):
 
     return JsonResponse({"data": context, 'totalcartitems': len(cart_data)})
 
-
-
-
-
-    
-   
-   
+  
 
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -601,15 +548,13 @@ def checkout_view(request):
       return redirect("app1:index")
    
     
-    
-    
     cart_total_amount = 0
     total_amount = 0
 
       
 
     if 'cart_data_obj' in request.session:
-        # cart_data = request.session['cart_data_obj']
+       
         cart_data = request.session.get('cart_data_obj',{})
         
         if cart_data =={}:
@@ -714,19 +659,6 @@ def checkout_view(request):
         print("payment done")
     
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     return render(request, 'app1/checkout.html', {
             'cart_data': cart_data,
             'totalcartitems': len(cart_data),
@@ -740,34 +672,10 @@ def checkout_view(request):
 
 
 
-
-
-
-
-
-    
-
-    
-    
-    
-    
-
-    
-    
-    
-
-
-
-
-
 def validate_phone_number(value):
    
     if not value.isdigit() or len(value) < 10:
         raise ValidationError('Invalid phone number. Please enter a valid numeric value with at least 10 digits.')
-
-
-
-
 
 
 # Customer Dashboard
@@ -777,8 +685,7 @@ def customer_dashboard(request):
       messages.warning(request,f"Please log in to access dashboard")
       return redirect("app1:index")
    
-    
-        
+       
     orders=CartOrder.objects.filter(user=request.user).order_by("-id")
     
     
@@ -843,13 +750,6 @@ def customer_dashboard(request):
                 messages.warning(request, 'Address already exists.')
                 return redirect("app1:dashboard")
                 
-                
-
-    
-    
-        
-
-    
         
     wallet_amt = wallet.objects.filter(user=request.user)
 
@@ -932,36 +832,33 @@ def place_order(request):
             for p in products:
                 p.stock_count=int(p.stock_count) - int(item['qty'])
                 p.save() 
-                
-                
-                
-                
-    # store data in database
+                             
+   
     if 'cart_data_obj' in request.session:
         cart_data = request.session['cart_data_obj']
         print(cart_data)
 
-        # Calculate total_amount for the entire order
+       
         for p_id, item in cart_data.items():
             try:
-                # Split the price string into individual prices and convert to float
+                
                 prices = [float(price) for price in item.get('price', '').split()]
-                # Sum up the individual prices
+               
                 total_price = sum(prices)
                 qty = int(item.get('qty', 0))
                 total_amount += qty * total_price
             except (ValueError, TypeError):
-                # Handle conversion errors if qty or total_price is not a valid number
+                
                 pass
 
         if request.user.is_authenticated:
-            # Create CartOrder for the entire order only if the user is authenticated
+           
             order = CartOrder.objects.create(
                 user=request.user,
                 price=total_amount
             )
 
-            # Create CartOrderItems for each product in the cart
+            
             for p_id, item in cart_data.items():
                 try:
                     prices = [float(price) for price in item.get('price', '').split()]
@@ -969,7 +866,7 @@ def place_order(request):
                     qty = int(item.get('qty', 0))
                     cart_total_amount += qty * total_price
 
-                    # Create CartOrderItems for each product
+                  
                     CartOrderItems.objects.create(
                         order=order,
                         invoice_no="INVOICE_NO-" + str(order.id),
@@ -983,7 +880,7 @@ def place_order(request):
                     pass
     
     
-    #till here
+   
         del request.session['cart_data_obj']
     else:
         return redirect("app1:index")
@@ -1107,12 +1004,6 @@ def wallet_order_place(request):
     print(user_wallet.Amount)
            
     return render(request, 'app1/place-order.html',{'user_wallet.Amount':user_wallet.Amount})
-
-
-
-
-
-
 
 
 # PAYPAL
@@ -1288,7 +1179,6 @@ def add_to_wishlist(request):
     return JsonResponse(context)
 
 
-
 # remove from wishlist
 
 def remove_wishlist(request):
@@ -1313,10 +1203,6 @@ def remove_wishlist(request):
     
     
     return JsonResponse({"data":data,"w":wishlist_json})
-
-
-
-
 
 
 def referral_coupon(request):
@@ -1362,9 +1248,7 @@ def referral_coupon(request):
             referral_user.save()
             print(referral_user)
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-        
-        
-        
+                
 def about_us(request):
     
     return render(request, 'app1/about_us.html')
@@ -1372,10 +1256,9 @@ def about_us(request):
 def contact(request):
     
     return render(request, 'app1/contact.html')
-
-        
-            
-            
+           
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)            
         
         
     

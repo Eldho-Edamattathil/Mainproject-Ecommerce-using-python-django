@@ -154,8 +154,6 @@ def sales_report(request):
   
   
   
-  
-  
 def admin_products_list(request):
     if not request.user.is_authenticated:
         if not request.user.is_superadmin:
@@ -174,19 +172,12 @@ def admin_products_list(request):
 
 
 
-
-
-
-
-
-
 @login_required(login_url='adminside:admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_products_details(request, pid):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
-    # if not request.user.is_superadmin:
-    #     return redirect('adminside:admin_login')
+   
 
     try:
         product = Product.objects.get(pid=pid)
@@ -197,14 +188,14 @@ def admin_products_details(request, pid):
     if request.method == 'POST':
         form = CreateProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
-            # Save the form including the image
+           
             product = form.save(commit=False)
             product_image = form.cleaned_data['new_image']
             if product_image is not None:
                 product.image = product_image
             product.save()
 
-            # Update or create additional images
+          
             for i in product_images:
                 image_field_name = f'product_image{i.id}'
                 image = request.FILES.get(image_field_name)
@@ -233,22 +224,6 @@ def admin_products_details(request, pid):
     }
     return render(request, 'adminside/admin_products_details.html', context)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   
 
 @login_required(login_url='adminside:admin_login') 
@@ -265,9 +240,6 @@ def block_unblock_products(request, pid):
   return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
   
     
-    
-
-
 
 @login_required(login_url='adminside:admin_login')
 def add_product(request):
@@ -337,7 +309,7 @@ def add_product(request):
         product.save()
 
         # Handling additional images
-        additional_image_count = 5  # Change this to the desired count of additional images
+        additional_image_count = 5  
         for i in range(1, additional_image_count + 1):
             image_field_name = f'product_image{i}'
             image = request.FILES.get(image_field_name)
@@ -419,34 +391,32 @@ def admin_add_category(request):
 
 
 
-
-
 @login_required(login_url='adminside:admin_login')
 def admin_category_edit(request, cid):
     if not request.user.is_authenticated:
         return redirect('adminside:admin_login')
 
-    # Using get_object_or_404 to get the Category or return a 404 response if it doesn't exist
+   
     categories = get_object_or_404(Category, cid=cid)
 
     if request.method == 'POST':
-        # Update the fields of the existing category object
+      
         cat_title = request.POST.get("category_name")
         cat_image = request.FILES.get('category_image')
 
-        # Update the category object with the new title and image
+       
         categories.title = cat_title
         if cat_image is not None:
             categories.image = cat_image
 
         
-        # Save the changes to the database
+      
         categories.save()
 
-        # Redirect to the category list page after successful update
+       
         return redirect('admindash:admin_category_list')
 
-    # If the request method is GET, render the template with the category details
+    
     context = {
         "categories_title": categories.title,
         "categories_image": categories.image,
@@ -488,11 +458,6 @@ def available_category(request,cid):
     
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-
-
-
-
-
 
 
 # order management
@@ -557,16 +522,7 @@ def admin_order_detail(request,id):
         'order': order,
     }
     
-    return render(request,'adminside/admin-order-detail.html',context)
-
-
-
-
-
-    
-    
-  
-    
+    return render(request,'adminside/admin-order-detail.html',context)  
 
     
 @login_required(login_url='adminside:admin_login')      
@@ -721,9 +677,6 @@ def delete_coupon(request,id):
     
 
 
-  
-  
-
 
 def product_offers(request):
     offers=ProductOffer.objects.all()
@@ -804,8 +757,6 @@ def edit_product_offers(request, id):
         
             
 
-
-
 def create_product_offer(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
@@ -861,10 +812,6 @@ def delete_product_offer(request,id):
 
 # Category Offers
 
-
-
-
-
 def category_offers(request):
     if not request.user.is_superadmin:
         return redirect('adminside:admin_login')
@@ -898,13 +845,6 @@ def category_offers(request):
         'offers': offers
     }
     return render(request, 'adminside/category_offers.html', context)
-
-
-
-
-
-
-
 
 
 

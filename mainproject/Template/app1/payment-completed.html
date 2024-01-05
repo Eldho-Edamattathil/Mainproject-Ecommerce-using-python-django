@@ -228,14 +228,24 @@
         </div>
       </div>
       <button onclick="downloadPDF()" style="color: rgb(255, 255, 255);"class="btn btn-danger">Download PDF</button>
-      <script>
+      <!-- <script>
         function downloadPDF() {
           const element = document.querySelector('.invoice');
     
           // Use html2pdf to generate the PDF from the HTML content
           html2pdf(element);
         }
-      </script>
+      </script> -->
+      <script>
+        function downloadPDF() {
+            const element = document.querySelector('.invoice');
+    
+            // Use html2pdf to generate the PDF from the HTML content
+            html2pdf(element, {
+                filename: 'invoice.pdf', // Specify the desired filename here
+            });
+        }
+    </script>
     </div>
     <div class="invoice-footer">
       Hey {{request.user.first_name}},Thanks for shopping with us....!!!
