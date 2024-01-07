@@ -96,6 +96,10 @@ urlpatterns = [
   
   path("about-us/",views.about_us, name="about-us"),
    
-  path("contact/",views.contact, name="contact")
+  path("contact/",views.contact, name="contact"),
+  
+  path("helloworld/", views.hello_world, name='hello_world'),
+  
+  path("reviewedit/<int:id>", views.edit_review, name='reviewedit')
   
 ]

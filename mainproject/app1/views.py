@@ -169,6 +169,7 @@ def product_detail(request, pid):
     variants = Variants.objects.filter(product=product)
     review=ProductReview.objects.filter(product=product).order_by("-date")
     average_rating =ProductReview.objects.filter(product=product).aggregate(rating=Avg("rating"))
+    users_with_reviews = UserDetails.objects.filter(user__productreview__product=product)
     try:
         
         discount_offer = ProductOffer.objects.get(active=True)
@@ -192,17 +193,21 @@ def product_detail(request, pid):
     
     
     review_form=ProductReviewForm()
+    edit_review_form = ProductReviewForm()
+    has_reviewed = False
     if request.user.is_authenticated:
         
         has_purchased = CartOrderItems.objects.filter(
             order__user=request.user,
             item=product.title,
         ).exists()
+        
     else:
        
         has_purchased = False
-    
-    
+        
+        
+       
     
 
     context = {
@@ -211,13 +216,15 @@ def product_detail(request, pid):
         'review_form':review_form,
         "category": category,
         "products": products,
+        'has_reviewed': has_reviewed,
         "sizes": sizes,
         'review':review,
         'average_rating':average_rating,
         "variants": variants,
         "discount_offer":discount_offer,
         "discounted_offer":discounted_offer,
-        "has_purchased":has_purchased
+        "has_purchased":has_purchased,
+        "users_with_reviews":users_with_reviews,
         
     }
 
@@ -280,8 +287,29 @@ def add_ajax_review(request, pid):
     except Exception as e:
         return JsonResponse({'bool': False, 'error': str(e)})
 
-
+# review edit
+def edit_review(request,id):
     
+    try:
+         review = get_object_or_404(ProductReview, id=id, user=request.user)
+    except Http404:
+        messages.warning(request, 'Please modify the review you added')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+
+    if request.method == 'POST':
+        form = ProductReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            # Update the review with the edited content
+            review.review = form.cleaned_data['review']
+            review.rating = form.cleaned_data['rating']
+            review.save()
+            messages.warning(request,"Review edited successfully")
+            return redirect('app1:index')  
+    else:
+        form = ProductReviewForm(initial={'review': review.review, 'rating': review.rating})
+
+    return render(request, 'app1/edit_review.html', {'form': form,'review':review})
 
 def search_view(request):
     query =request.GET.get('q')
@@ -375,7 +403,6 @@ def cart_view(request):
     cart_total_amount = 0
     final_money=0
     money=0
-    print(request.session.items())
     current_date = timezone.now().date()
     available_coupons = Coupon.objects.filter(active=True, active_date__lte=current_date, expiry_date__gte=current_date)
     
@@ -388,7 +415,7 @@ def cart_view(request):
             try:
                
                 prices = [float(price) for price in item.get('price', '').split()]
-                print(prices)
+                
                 
                
                 total_price = sum(prices)
@@ -459,7 +486,7 @@ def cart_view(request):
             'available_coupons':available_coupons 
         })
     
-    print("hello123")
+    
     messages.warning(request, "Your cart is empty")
     return redirect('app1:index') 
     
@@ -1261,4 +1288,29 @@ def custom_404(request, exception):
     return render(request, '404.html', status=404)            
         
         
-    
+def custom_500(request):
+    return render(request, '500.html', status=500)
+
+
+def hello_world(request): 
+    raise Exception('This is a test error')
+
+# def review_edit(request,pk):
+    review = get_object_or_404(ProductReview, pk=pk)
+
+
+    if request.user != review.user:
+        messages.warning(request, 'Please add review to edit')
+        
+        return redirect('app1:index')
+
+    if request.method == 'POST':
+        form = ProductReviewForm(request.POST, instance=review)
+        if form.is_valid():
+            form.save()
+           
+            return redirect('app1:product_detail', pid=review.product.pid)
+    else:
+        form = ProductReviewForm(instance=review)
+
+    return render(request, 'edit_review.html', {'form': form, 'review': review})

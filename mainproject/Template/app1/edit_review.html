@@ -1,0 +1,18 @@
+
+{% extends 'partial/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <form method="post" action="{% url 'app1:reviewedit' review.id %}" class="p-4 border rounded">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

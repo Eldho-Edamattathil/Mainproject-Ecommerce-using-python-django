@@ -19,9 +19,11 @@ from django.urls import path,include
 from django.conf import settings
 from django.conf.urls.static import static
 from userauths import urls as userauths_urls
-from django.conf.urls import handler404
+from django.conf.urls import handler404,handler500
 
 
+
+handler500 = 'app1.views.custom_500'
 handler404 = 'app1.views.custom_404'
 urlpatterns = [
     path('admin/', admin.site.urls),
